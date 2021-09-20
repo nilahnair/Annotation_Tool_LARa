@@ -35,16 +35,19 @@ class GUI(QtWidgets.QMainWindow):
         self.findChild(QtWidgets.QStatusBar, 'statusbar').showMessage(
             f"Annotation Tool Version: {g.version}")
 
+        self.video_widget = self.findChild(QtWidgets.QWidget, "videoWidget")
+        #self.change_video_type("video")
+        self.change_video_type("mocap")
+        self.tab_widget: QtWidgets.QTabWidget
+        self.tab_widget = self.findChild(QtWidgets.QTabWidget, "RightWidget")
+        self.tab_widget.currentChanged.connect(self.change_mode)
+
+        # print(self.tab_widget.tabBar())
         self.enabled = False
 
         self.io_controller = IOController(self)
         self.graphics_controller = SkeletonGraphController(self)
         self.playback_controller = PlaybackController(self)
-
-        self.tab_widget: QtWidgets.QTabWidget
-        self.tab_widget = self.findChild(QtWidgets.QTabWidget, "RightWidget")
-        self.tab_widget.currentChanged.connect(self.change_mode)
-        # print(self.tab_widget.tabBar())
 
         self.controllers = [ManualAnnotationController(self), LabelCorrectionController(self),
                             AutomaticAnnotationController(self), PredictionRevisionController(self),
@@ -98,7 +101,7 @@ class GUI(QtWidgets.QMainWindow):
             self.controllers[mode].reload()
         self.io_controller.reload(mode)
 
-    def change_setup(self, controller_classes: list):
+    def change_setup(self, controller_classes: list, video_type="mocap"):
         self.tab_widget.clear()
 
         for controller in self.controllers:
@@ -110,6 +113,14 @@ class GUI(QtWidgets.QMainWindow):
             # print(i, self.controllers[i])
             if self.enabled:
                 controller.enable_widgets()
+
+    def change_video_type(self, video_type):
+        if video_type == "mocap":
+            uic.loadUi(f'..{os.sep}ui{os.sep}mocap.ui', self.video_widget)  # Load the .ui file
+        elif video_type == "video":
+            uic.loadUi(f'..{os.sep}ui{os.sep}video.ui', self.video_widget)  # Load the .ui file
+        else:
+            raise ValueError(f'Only possible video_types are "mocap" and "video". Got {video_type} instead.')
 
     def fixed_windows_mode(self, enable: str):
         for ctrl in self.controllers:
