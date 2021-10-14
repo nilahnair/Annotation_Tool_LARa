@@ -9,11 +9,12 @@ import os
 
 import numpy as np
 
-from data_management import DataProcessor, WindowProcessor, RetrievalData
+from data_management import DataProcessor, WindowProcessor, RetrievalData, KitchenVideoProcessor
 
 data: DataProcessor = None
 windows: WindowProcessor = None
 retrieval: RetrievalData = None
+videos: KitchenVideoProcessor = None
 
 settings = {'openFilePath': '..' + os.sep + 'unlabeled',
             'saveFinishedPath': '..' + os.sep + 'labeled',
@@ -46,7 +47,7 @@ def get_states(file_name):
     scenario = file_name.split("_")[0]  # Lxy
     with open(f'..{os.sep}labels{os.sep}states{scenario}.txt', 'r') as file:
         states = file.read().split(',')
-        #print(states)
+        # print(states)
 
 
 networks_path = '..' + os.sep + 'networks' + os.sep

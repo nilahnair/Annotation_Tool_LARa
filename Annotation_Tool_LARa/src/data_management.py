@@ -5,14 +5,20 @@ Created on 22.11.2019
 @email: Erik.Altermann@tu-dortmund.de
 
 """
+import datetime
 import math
 import os
+from datetime import time, timedelta
 
 import dill
 import numpy as np
 import torch
 from sklearn.metrics.pairwise import cosine_similarity
 from torch.utils.data import Dataset
+from zipfile import ZipFile
+from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
+from PyQt5.QtCore import QUrl
+import shutil
 
 import global_variables as g
 
@@ -784,6 +790,76 @@ class WindowProcessorStates(WindowProcessor):
         # --------------------------------------------------------------------------------------
 
         self.save_windows(directory, annotator_suffix[1:] + '_windows')
+
+
+class KitchenVideoProcessor:
+    """"""
+
+    def __init__(self, path: str):
+        """"""
+        self.videos = []
+
+        with ZipFile(path, 'r') as zip_file:
+            # zip_file.printdir()
+            contents = zip_file.namelist()
+            self.extract_path = os.path.splitext(path)[0]
+            zip_file.extractall(path=self.extract_path)
+
+            video_names = [name for name in contents if ".avi" in name]
+            sync_names = [name for name in contents if ".txt" in name]
+            for video_name in video_names:
+                name = video_name.split("_")[2].split("-")[0]
+                video = QMediaContent(QUrl.fromLocalFile(os.path.join(self.extract_path, video_name)))
+                sync = [n for n in sync_names if name in n][0]
+                self.videos.append((name, video, sync))
+            # shutil.rmtree(self.extract_path)
+            sync_info = self.check_sync(sync_names)
+            print(sync_info)
+            for i, video_info in enumerate(self.videos):
+                name, video, sync = video_info
+                print(sync)
+                self.videos[i] = (name, video, sync_info[sync][0], sync_info[sync][1])
+
+    def check_sync(self, sync_names):
+        latest_start = time.min
+        earliest_end = time.max
+        offsets = {}
+        for sync_file in sync_names:
+            with open(os.path.join(self.extract_path, sync_file)) as txt:
+                lines = txt.readlines()
+                times = [time(*[int(a) for a in lines[i].split(" ")[-1][:-2].split("_")]) for i in range(len(lines))]
+                print(f"first: {lines[0]} last: {lines[-1][:-1]}")
+                first = times[0]
+                last = times[-1]
+                print(f"first: {first} last: {last}\n")
+                if first > latest_start:
+                    latest_start = first
+                if last < earliest_end:
+                    earliest_end = last
+        print(f"first: {latest_start} last: {earliest_end}\n")
+        for sync_file in sync_names:
+            with open(os.path.join(self.extract_path, sync_file)) as txt:
+                lines = txt.readlines()
+                times = [time(*[int(a) for a in lines[i].split(" ")[-1][:-2].split("_")]) for i in range(len(lines))]
+
+                print("before:", len(times))
+                filtered_times = [time_ for time_ in times if latest_start <= time_ <= earliest_end]
+                print("after:", len(filtered_times))
+                abs_milliseconds = [self.time_to_milliseconds(time_) for time_ in filtered_times]
+                milliseconds = [ms - abs_milliseconds[0] for ms in abs_milliseconds]
+                offset = abs_milliseconds[0] - self.time_to_milliseconds(times[0])
+                print(milliseconds[0], offset, milliseconds[-1])
+
+                offsets[sync_file] = (offset, milliseconds[-1])
+        return offsets
+
+    def time_to_milliseconds(self, time_: time):
+        seconds = (time_.minute * 60) + time_.second
+        milliseconds = (seconds * 1000) + (time_.microsecond // 1000)
+        return milliseconds
+
+    def close(self):
+        shutil.rmtree(self.extract_path)
 
 
 class SlidingWindowDataset(Dataset):

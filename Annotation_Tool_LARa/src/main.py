@@ -13,11 +13,13 @@ import ctypes
 import numpy as np
 from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, Qt, QEvent
+from PyQt5 import QtMultimediaWidgets
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
+from PyQt5.QtMultimedia import QMediaPlayer
 
 from controllers import *
-from data_management import DataProcessor, WindowProcessor, WindowProcessorStates
+from data_management import DataProcessor, WindowProcessor, WindowProcessorStates, KitchenVideoProcessor
 from dialogs import EnterIDDialog, SettingsDialog, OpenFileDialog
 
 import global_variables as g
@@ -35,9 +37,9 @@ class GUI(QtWidgets.QMainWindow):
         self.findChild(QtWidgets.QStatusBar, 'statusbar').showMessage(
             f"Annotation Tool Version: {g.version}")
 
-        self.video_widget = self.findChild(QtWidgets.QWidget, "videoWidget")
-        #self.change_video_type("video")
-        self.change_video_type("mocap")
+        self.video_widget = self.findChild(QtWidgets.QStackedWidget, "videoStackedWidget")
+        self.video_type = "mocap"
+
         self.tab_widget: QtWidgets.QTabWidget
         self.tab_widget = self.findChild(QtWidgets.QTabWidget, "RightWidget")
         self.tab_widget.currentChanged.connect(self.change_mode)
@@ -81,12 +83,18 @@ class GUI(QtWidgets.QMainWindow):
         self.controllers[mode].add_status_message(msg)
 
     def enable_widgets(self):
-        self.graphics_controller.enable_widgets()
-        self.playback_controller.enable_widgets()
+        if self.video_type == "mocap":
+            self.graphics_controller.enable_widgets()
+            self.playback_controller.enable_widgets()
+        elif self.video_type == "video":
+            self.playback_controller.enable_widgets()
+
         for ctrl in self.controllers:
             ctrl.enable_widgets()
+
         self.io_controller.enable_widgets()
-        self.playback_controller.frame_changed('loadedBackup')
+        if self.video_type == "mocap":
+            self.playback_controller.frame_changed('loadedBackup')
 
         self.enabled = True
 
@@ -116,11 +124,24 @@ class GUI(QtWidgets.QMainWindow):
 
     def change_video_type(self, video_type):
         if video_type == "mocap":
-            uic.loadUi(f'..{os.sep}ui{os.sep}mocap.ui', self.video_widget)  # Load the .ui file
+            self.video_type = video_type
+            self.video_widget.setCurrentIndex(0)
+            self.playback_controller = PlaybackController(self)
         elif video_type == "video":
-            uic.loadUi(f'..{os.sep}ui{os.sep}video.ui', self.video_widget)  # Load the .ui file
+            self.video_type = video_type
+            self.video_widget.setCurrentIndex(1)
+            self.playback_controller = VideoPlaybackController(self)
         else:
             raise ValueError(f'Only possible video_types are "mocap" and "video". Got {video_type} instead.')
+
+    def clearLayout(self, layout: QtWidgets.QLayout):
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+            elif child.layout():
+                self.clearLayout(child.layout())
+        # layout.deleteLater()
 
     def fixed_windows_mode(self, enable: str):
         for ctrl in self.controllers:
@@ -129,6 +150,11 @@ class GUI(QtWidgets.QMainWindow):
     def pause(self):
         # print("pause")
         self.playback_controller.pause()
+
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        if g.videos is not None:
+            g.videos.close()
+        super(GUI, self).closeEvent(a0)
 
     def eventFilter(self, _, event):
         if event.type() == QEvent.KeyPress:
@@ -176,6 +202,16 @@ class PlaybackController:
         self.set_start_point_button = self.gui.findChild(QtWidgets.QPushButton, 'setStartPointButton')
 
         # Connect all gui elements to correspoding actions.
+        try:
+            self.play_button.clicked.disconnect()
+            self.reverse_fast_button.clicked.disconnect()
+            self.reverse_button.clicked.disconnect()
+            self.reverse_slow_button.clicked.disconnect()
+            self.forward_slow_button.clicked.disconnect()
+            self.forward_button.clicked.disconnect()
+            self.forward_fast_button.clicked.disconnect()
+        except:
+            pass
         self.play_button.clicked.connect(lambda _: self.toggle_paused())
         self.reverse_fast_button.clicked.connect(lambda _: self.set_speed(-3))
         self.reverse_button.clicked.connect(lambda _: self.set_speed(-2))
@@ -343,7 +379,7 @@ class PlaybackController:
         return self.current_frame - 1
 
     def set_start_frame(self):
-        start = str(self.gui.get_start_frame()+1)
+        start = str(self.gui.get_start_frame() + 1)
         self.current_frame_line_edit.setText(start)
         self.frame_changed('current_frame_line_edit')
 
@@ -373,6 +409,213 @@ class TimerThread(QtCore.QThread):
 
     def timerEvent(self, _):  # Timer gets discarded. There is only 1 active timer anyway.
         self.on_timeout.emit()
+
+
+class VideoPlaybackController:
+    def __init__(self, gui):
+        self.gui = gui
+        self.speed = 2
+        self.paused = True
+        self.enabled = False
+        self.current_frame = 1
+        self.current_video_index = None
+
+        self.play_button = self.gui.findChild(QtWidgets.QPushButton, 'playPauseButton')
+        self.reverse_fast_button = self.gui.findChild(QtWidgets.QPushButton, 'reverseFastButton')
+        self.reverse_button = self.gui.findChild(QtWidgets.QPushButton, 'reverseButton')
+        self.reverse_slow_button = self.gui.findChild(QtWidgets.QPushButton, 'reverseSlowButton')
+        self.forward_slow_button = self.gui.findChild(QtWidgets.QPushButton, 'forwardSlowButton')
+        self.forward_button = self.gui.findChild(QtWidgets.QPushButton, 'forwardButton')
+        self.forward_fast_button = self.gui.findChild(QtWidgets.QPushButton, 'forwardFastButton')
+
+        self.frame_slider = self.gui.findChild(QtWidgets.QScrollBar, 'frameSlider')
+        self.current_frame_line_edit = self.gui.findChild(QtWidgets.QLineEdit, 'currentFrameLineEdit')
+        self.max_frames_label = self.gui.findChild(QtWidgets.QLabel, 'maxFramesLabel')
+        self.set_start_point_button = self.gui.findChild(QtWidgets.QPushButton, 'setStartPointButton')
+
+        # Connect all gui elements to correspoding actions.
+        try:
+            self.play_button.clicked.disconnect()
+            self.reverse_fast_button.clicked.disconnect()
+            self.reverse_button.clicked.disconnect()
+            self.reverse_slow_button.clicked.disconnect()
+            self.forward_slow_button.clicked.disconnect()
+            self.forward_button.clicked.disconnect()
+            self.forward_fast_button.clicked.disconnect()
+        except:
+            pass
+        self.play_button.clicked.connect(lambda _: self.toggle_paused())
+        self.reverse_fast_button.clicked.connect(lambda _: self.set_speed(-3))
+        self.reverse_button.clicked.connect(lambda _: self.set_speed(-2))
+        self.reverse_slow_button.clicked.connect(lambda _: self.set_speed(-1))
+        self.forward_slow_button.clicked.connect(lambda _: self.set_speed(1))
+        self.forward_button.clicked.connect(lambda _: self.set_speed(2))
+        self.forward_fast_button.clicked.connect(lambda _: self.set_speed(3))
+
+        self.frame_slider.sliderMoved.connect(lambda _: self.frame_changed('frame_slider'))
+        self.current_frame_line_edit.returnPressed.connect(
+            lambda: self.frame_changed('current_frame_line_edit'))
+        self.set_start_point_button.clicked.connect(lambda _: self.set_start_frame())
+
+        self.currentFrameLabel = self.gui.findChild(QtWidgets.QLabel, 'currentFrameLabel')
+
+        self.player = QMediaPlayer()
+        self.player.setVideoOutput(self.gui.findChild(QtMultimediaWidgets.QVideoWidget, "videoWidget"))
+        self.dropdown: QtWidgets.QComboBox = self.gui.findChild(QtWidgets.QComboBox, "views_comboBox")
+        self.dropdown.addItems([name for name, _, _, _ in g.videos.videos])
+        self.dropdown.currentIndexChanged.connect(self.change_video)
+        self.change_video(0)
+
+    def enable_widgets(self):
+        if self.enabled is False:
+            self.play_button.setEnabled(True)
+            self.reverse_fast_button.setEnabled(True)
+            self.reverse_button.setEnabled(True)
+            self.reverse_slow_button.setEnabled(True)
+            self.forward_slow_button.setEnabled(True)
+            # self.forward_button This button remains disabled since thats the standard speed
+            self.forward_fast_button.setEnabled(True)
+            self.current_frame_line_edit.setEnabled(True)
+            self.frame_slider.setEnabled(True)
+            self.set_start_point_button.setEnabled(True)
+            self.enabled = True
+
+        #  TODO reenable these
+        # self.current_frame_line_edit.setValidator(QtGui.QIntValidator(0, g.videos.number_samples))
+        # self.frame_slider.setRange(1, g.data.number_samples)
+        # self.frame_changed('loadedBackup')
+
+    def set_max_frame(self, max_frame):
+        self.max_frames_label.setText("out of " + str(max_frame))
+        self.frame_slider.setRange(1, max_frame)
+
+    def set_speed(self, speed):
+        # print("new playback speed: "+ str(speed))
+        if self.speed == -3:
+            self.reverse_fast_button.setEnabled(True)
+        elif self.speed == -2:
+            self.reverse_button.setEnabled(True)
+        elif self.speed == -1:
+            self.reverse_slow_button.setEnabled(True)
+        elif self.speed == 1:
+            self.forward_slow_button.setEnabled(True)
+        elif self.speed == 2:
+            self.forward_button.setEnabled(True)
+        elif self.speed == 3:
+            self.forward_fast_button.setEnabled(True)
+
+        self.speed = speed
+
+        if self.speed == -3:
+            self.reverse_fast_button.setEnabled(False)
+            self.player.setPlaybackRate(-2.0)
+        elif self.speed == -2:
+            self.reverse_button.setEnabled(False)
+            self.player.setPlaybackRate(-1.0)
+        elif self.speed == -1:
+            self.reverse_slow_button.setEnabled(False)
+            self.player.setPlaybackRate(-0.5)
+        elif self.speed == 1:
+            self.forward_slow_button.setEnabled(False)
+            self.player.setPlaybackRate(0.5)
+        elif self.speed == 2:
+            self.forward_button.setEnabled(False)
+            self.player.setPlaybackRate(1.0)
+        elif self.speed == 3:
+            self.forward_fast_button.setEnabled(False)
+            self.player.setPlaybackRate(2.0)
+
+    def increase_speed(self):
+        if self.speed == -1:
+            self.set_speed(1)
+        elif self.speed < 3:
+            self.set_speed(self.speed + 1)
+
+    def decrease_speed(self):
+        if self.speed == 1:
+            self.set_speed(-1)
+        elif self.speed > -3:
+            self.set_speed(self.speed - 1)
+
+    def set_forward(self):
+        if self.speed < 0:
+            self.set_speed(-self.speed)
+
+    def set_backward(self):
+        if self.speed > 0:
+            self.set_speed(-self.speed)
+
+    def toggle_direction(self):
+        self.set_speed(-self.speed)
+
+    def toggle_paused(self):
+        self.paused = not self.paused
+        if self.paused:
+            self.pause()
+        else:
+            self.play()
+
+    def pause(self):
+        self.paused = True
+        self.play_button.setText("Play")
+        # self.timer.stop()
+        self.player.pause()
+        print("paused at positon:", self.player.position())
+
+    def play(self):
+        self.paused = False
+        self.play_button.setText("Pause")
+        # self.timer.start()
+        self.player.play()
+
+    def frame_changed(self, source):
+        if source == 'timer':
+            # currentframe was updated on_timeout()
+            self.frame_slider.setValue(self.current_frame)
+        elif source == 'frame_slider':
+            self.current_frame = self.frame_slider.value()
+        elif source == 'loadedBackup':
+            if len(g.windows.windows) > 0:
+                self.current_frame = 1
+                # self.current_frame = g.windows.windows[-1][1]  # end value of the last window
+            else:
+                self.current_frame = 1
+            self.frame_slider.setValue(self.current_frame)
+        elif source == 'current_frame_line_edit':
+            self.current_frame = int(self.current_frame_line_edit.text())
+            if self.current_frame > g.data.number_samples:
+                self.current_frame = g.data.number_samples
+            else:
+                self.current_frame = max((self.current_frame, 1))
+            self.frame_slider.setValue(self.current_frame)
+        else:
+            raise ValueError(f"Unknown source passed: {source}")
+
+        # TODO reenable this
+        # self.currentFrameLabel.setText(f"Current Frame: {self.current_frame}/{g.data.number_samples}")
+        self.gui.update_new_frame(self.current_frame - 1)
+
+    def get_current_frame(self):
+        return self.current_frame - 1
+
+    def set_start_frame(self):
+        start = str(self.gui.get_start_frame() + 1)
+        self.current_frame_line_edit.setText(start)
+        self.frame_changed('current_frame_line_edit')
+
+    def change_video(self, index):
+        #print("changing video", index)
+        if self.current_video_index is None:
+            old_offset = 0
+        else:
+            _, _, old_offset, _ = g.videos.videos[self.current_video_index]
+        _, video, new_offset, _ = g.videos.videos[index]
+        #new_position = self.player.position() - old_offset + new_offset
+        self.player.setMedia(video)
+        #self.player.setPosition(new_position)
+        self.current_video_index = index
+
+        # self.player.play()
 
 
 class SkeletonGraphController:
@@ -409,6 +652,7 @@ class SkeletonGraphController:
         if self.enabled is False:
             self.graph.setEnabled(True)
             self.update_skeleton_graph(0)
+
             self.enabled = True
 
         self.update_floor_grid()
@@ -567,14 +811,26 @@ class IOController:
             elif annotated == 2:
                 controllers = [StateCorrectionController]
                 g.get_states(file_name)
+            elif annotated == 3:
+                controllers = []
+
+                pass
+
             self.gui.enabled = False
             self.gui.change_setup(controllers)
             if g.windows is not None:
                 g.windows.close()
                 g.retrieval = None
+                g.videos = None
+                g.data = None
 
             # TODO: add a try catch block here
-            g.data = DataProcessor(file_path, annotated > 0)
+            if annotated < 3:
+                g.data = DataProcessor(file_path, annotated > 0)
+            else:
+                g.videos = KitchenVideoProcessor(file_path)
+                self.gui.change_video_type("video")
+
             if annotated != 2:
                 g.windows = WindowProcessor(file_path, annotated > 0, load_backup)
             else:

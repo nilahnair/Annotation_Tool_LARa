@@ -477,6 +477,8 @@ class OpenFileDialog(QtWidgets.QDialog):
         self.states_button.clicked.connect(lambda _: self.scratch_button.setText("Start from Scratch"))
         self.states_button.clicked.connect(lambda _: self.backup_button.setText("Load Backup"))
 
+        self.kitchen_button = self.findChild(QtWidgets.QRadioButton, "kitchen_radioButton")
+
         self.buttonBox = self.findChild(QtWidgets.QDialogButtonBox, 'buttonBox')
         self.ok_button = self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok)
         self.ok_button.setEnabled(False)
@@ -490,13 +492,16 @@ class OpenFileDialog(QtWidgets.QDialog):
             directory = g.settings['openFilePath']
             message = 'Select an unlabeled .csv file'
             filter_ = 'CSV Files (*.csv)'
-        else:
+        elif self.annotated_button.isChecked() or self.states_button.isChecked():
             directory = g.settings['saveFinishedPath']
             message = 'Select an _norm_data.csv file'
             filter_ = 'CSV Files (*norm_data.csv)'
+        else:  # elif self.kitchen_button.isChecked():
+            directory = g.settings['openFilePath']
+            message = 'Select an _norm_data.csv file'
+            filter_ = 'ZIP Files (*Video.zip)'
 
-        file, _ = QtWidgets.QFileDialog.getOpenFileName(self,
-                                                        message, directory, filter_, '')
+        file, _ = QtWidgets.QFileDialog.getOpenFileName(self, message, directory, filter_, '')
 
         if file != '':
             self.path_lineEdit.setText(file)
@@ -530,9 +535,10 @@ class OpenFileDialog(QtWidgets.QDialog):
             annotated = 0
         elif self.annotated_button.isChecked():
             annotated = 1
-        else:  # self.states_button.isChecked():
+        elif self.states_button.isChecked():
             annotated = 2
-
+        else:  # elif self.kitchen_button.isChecked():
+            annotated = 3
         path = self.path_lineEdit.text()
 
         self.result = (path, annotated, self.load_backup)
