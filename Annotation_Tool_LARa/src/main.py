@@ -65,7 +65,8 @@ class GUI(QtWidgets.QMainWindow):
         # self.enable_widgets()
 
     def update_new_frame(self, current_frame):
-        self.graphics_controller.update_skeleton_graph(current_frame)
+        if g.data is not None:
+            self.graphics_controller.update_skeleton_graph(current_frame)
 
         index = self.tab_widget.currentIndex()
 
@@ -461,6 +462,8 @@ class VideoPlaybackController:
 
         self.player = QMediaPlayer()
         self.player.setVideoOutput(self.gui.findChild(QtMultimediaWidgets.QVideoWidget, "videoWidget"))
+        self.player.positionChanged.connect(lambda _: self.frame_changed("video"))
+
         self.dropdown: QtWidgets.QComboBox = self.gui.findChild(QtWidgets.QComboBox, "views_comboBox")
         self.dropdown.addItems([name for name, _, _, _ in g.videos.videos])
         self.dropdown.currentIndexChanged.connect(self.change_video)
@@ -469,9 +472,9 @@ class VideoPlaybackController:
     def enable_widgets(self):
         if self.enabled is False:
             self.play_button.setEnabled(True)
-            self.reverse_fast_button.setEnabled(True)
-            self.reverse_button.setEnabled(True)
-            self.reverse_slow_button.setEnabled(True)
+            # self.reverse_fast_button.setEnabled(True) #Reverse function doesnt seem to work. Qt bug.
+            # self.reverse_button.setEnabled(True)
+            # self.reverse_slow_button.setEnabled(True)
             self.forward_slow_button.setEnabled(True)
             # self.forward_button This button remains disabled since thats the standard speed
             self.forward_fast_button.setEnabled(True)
@@ -480,10 +483,9 @@ class VideoPlaybackController:
             self.set_start_point_button.setEnabled(True)
             self.enabled = True
 
-        #  TODO reenable these
-        # self.current_frame_line_edit.setValidator(QtGui.QIntValidator(0, g.videos.number_samples))
-        # self.frame_slider.setRange(1, g.data.number_samples)
-        # self.frame_changed('loadedBackup')
+        self.current_frame_line_edit.setValidator(QtGui.QIntValidator(0, g.videos.video_length))
+        self.frame_slider.setRange(1, g.videos.video_length)
+        self.frame_changed('loadedBackup')
 
     def set_max_frame(self, max_frame):
         self.max_frames_label.setText("out of " + str(max_frame))
@@ -569,11 +571,12 @@ class VideoPlaybackController:
         self.player.play()
 
     def frame_changed(self, source):
-        if source == 'timer':
-            # currentframe was updated on_timeout()
+        if source == 'video':
+            self.current_frame = self.player.position()
             self.frame_slider.setValue(self.current_frame)
         elif source == 'frame_slider':
             self.current_frame = self.frame_slider.value()
+            self.player.setPosition(self.current_frame)
         elif source == 'loadedBackup':
             if len(g.windows.windows) > 0:
                 self.current_frame = 1
@@ -583,16 +586,16 @@ class VideoPlaybackController:
             self.frame_slider.setValue(self.current_frame)
         elif source == 'current_frame_line_edit':
             self.current_frame = int(self.current_frame_line_edit.text())
-            if self.current_frame > g.data.number_samples:
-                self.current_frame = g.data.number_samples
+            if self.current_frame > g.videos.video_length:
+                self.current_frame = g.videos.video_length
             else:
                 self.current_frame = max((self.current_frame, 1))
             self.frame_slider.setValue(self.current_frame)
+            self.player.setPosition(self.current_frame)
         else:
             raise ValueError(f"Unknown source passed: {source}")
 
-        # TODO reenable this
-        # self.currentFrameLabel.setText(f"Current Frame: {self.current_frame}/{g.data.number_samples}")
+        self.currentFrameLabel.setText(f"Current Frame: {self.current_frame}/{g.videos.video_length}")
         self.gui.update_new_frame(self.current_frame - 1)
 
     def get_current_frame(self):
@@ -812,7 +815,7 @@ class IOController:
                 controllers = [StateCorrectionController]
                 g.get_states(file_name)
             elif annotated == 3:
-                controllers = []
+                controllers = [ManualAnnotationController]
 
                 pass
 

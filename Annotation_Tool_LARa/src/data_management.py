@@ -797,7 +797,7 @@ class KitchenVideoProcessor:
 
     def __init__(self, path: str):
         """"""
-        self.videos = []
+        self.videos = []  # (name, QMediaContent, offset, length in ms)
 
         with ZipFile(path, 'r') as zip_file:
             # zip_file.printdir()
@@ -805,8 +805,8 @@ class KitchenVideoProcessor:
             self.extract_path = os.path.splitext(path)[0]
             zip_file.extractall(path=self.extract_path)
 
-            video_names = [name for name in contents if ".avi" in name]
-            sync_names = [name for name in contents if ".txt" in name]
+            video_names = [name for name in contents if ".avi" in name and "7150991" in name]
+            sync_names = [name for name in contents if ".txt" in name and "7150991" in name]
             for video_name in video_names:
                 name = video_name.split("_")[2].split("-")[0]
                 video = QMediaContent(QUrl.fromLocalFile(os.path.join(self.extract_path, video_name)))
@@ -819,6 +819,8 @@ class KitchenVideoProcessor:
                 name, video, sync = video_info
                 print(sync)
                 self.videos[i] = (name, video, sync_info[sync][0], sync_info[sync][1])
+
+        self.video_length = self.videos[0][3]
 
     def check_sync(self, sync_names):
         latest_start = time.min
