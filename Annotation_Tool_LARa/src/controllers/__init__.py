@@ -1,4 +1,5 @@
 from .manual_annotation_controller import ManualAnnotationController
+from .manual_annotation_controller import ManualAnnotationControllerVideo
 from .label_correction_controller import LabelCorrectionController
 from .automatic_annotation_controller import AutomaticAnnotationController
 from .prediction_revision_controller import PredictionRevisionController

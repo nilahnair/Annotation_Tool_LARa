@@ -79,7 +79,12 @@ networks = {1: {'name': 'Class Network',
             7: {'name': 'CNN IMU w150 s25',
                 'file_name': 'network_w150_s25.pt',
                 'annotator_id': 96,
-                'attributes': True}
+                'attributes': True},
+            8: {'name': 'CNN IMU w400 s25',
+                'file_name': 'network_w400_s25.pt',
+                'annotator_id': 97,
+                'attributes': True},
+
             }
 
 annotation_guide_link = "https://docs.google.com/document/d/1RNahPI2sCZdx1Iy0Gfp-ALjFgd_e-AKnU78_DubN7iU/edit"

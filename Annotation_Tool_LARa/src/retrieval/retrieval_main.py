@@ -28,7 +28,9 @@ if __name__ == "__main__":
     paths = browse_files()
     # datasets = None
 
-    for network_id, name in [(5, "w50 s12"), (6, "w100 s25"), (7, "w150 s25"), (3, "w200 s?")]:
+    #for network_id, name in [(5, "w50 s12"), (6, "w100 s25"), (7, "w150 s25"), (3, "w200 s?")]:
+    for network_id, name in [(9, "w400 s25")]:
+
         annotator = Annotator(network_id)
 
         map_attr_rep_sum_cos = 0

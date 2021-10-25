@@ -861,6 +861,7 @@ class KitchenVideoProcessor:
         return milliseconds
 
     def close(self):
+        del self.videos
         shutil.rmtree(self.extract_path)
 
 

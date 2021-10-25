@@ -10,13 +10,13 @@ import webbrowser
 import sys
 import ctypes
 
-import numpy as np
-from PyQt5 import QtWidgets, uic, QtCore, QtGui
+from PyQt5 import QtWidgets, uic, QtCore, QtGui, QtMultimediaWidgets
 from PyQt5.QtCore import pyqtSignal, Qt, QEvent
-from PyQt5 import QtMultimediaWidgets
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
+
+import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-from PyQt5.QtMultimedia import QMediaPlayer
 
 from controllers import *
 from data_management import DataProcessor, WindowProcessor, WindowProcessorStates, KitchenVideoProcessor
@@ -154,7 +154,10 @@ class GUI(QtWidgets.QMainWindow):
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         if g.videos is not None:
+            vpbc: VideoPlaybackController = self.playback_controller
+            vpbc.player.setMedia(QMediaContent())
             g.videos.close()
+
         super(GUI, self).closeEvent(a0)
 
     def eventFilter(self, _, event):
@@ -211,6 +214,10 @@ class PlaybackController:
             self.forward_slow_button.clicked.disconnect()
             self.forward_button.clicked.disconnect()
             self.forward_fast_button.clicked.disconnect()
+
+            self.frame_slider.sliderMoved.disconnect()
+            self.current_frame_line_edit.returnPressed.disconnect()
+            self.set_start_point_button.clicked.disconnect()
         except:
             pass
         self.play_button.clicked.connect(lambda _: self.toggle_paused())
@@ -443,6 +450,10 @@ class VideoPlaybackController:
             self.forward_slow_button.clicked.disconnect()
             self.forward_button.clicked.disconnect()
             self.forward_fast_button.clicked.disconnect()
+
+            self.frame_slider.sliderMoved.disconnect()
+            self.current_frame_line_edit.returnPressed.disconnect()
+            self.set_start_point_button.clicked.disconnect()
         except:
             pass
         self.play_button.clicked.connect(lambda _: self.toggle_paused())
@@ -571,6 +582,8 @@ class VideoPlaybackController:
         self.player.play()
 
     def frame_changed(self, source):
+        if not self.enabled:
+            return
         if source == 'video':
             self.current_frame = self.player.position()
             self.frame_slider.setValue(self.current_frame)
@@ -607,15 +620,15 @@ class VideoPlaybackController:
         self.frame_changed('current_frame_line_edit')
 
     def change_video(self, index):
-        #print("changing video", index)
+        # print("changing video", index)
         if self.current_video_index is None:
             old_offset = 0
         else:
             _, _, old_offset, _ = g.videos.videos[self.current_video_index]
         _, video, new_offset, _ = g.videos.videos[index]
-        #new_position = self.player.position() - old_offset + new_offset
+        # new_position = self.player.position() - old_offset + new_offset
         self.player.setMedia(video)
-        #self.player.setPosition(new_position)
+        # self.player.setPosition(new_position)
         self.current_video_index = index
 
         # self.player.play()
@@ -626,7 +639,8 @@ class SkeletonGraphController:
         self.gui = gui
         self.enabled = False
 
-        self.graph = gui.findChild(gl.GLViewWidget, 'skeletonGraph')
+        self.graph: gl.GLViewWidget = gui.findChild(gl.GLViewWidget, 'skeletonGraph')
+
         self.current_skeleton = None
         self.zgrid = None
         self.old_attr_index = -1
@@ -802,8 +816,6 @@ class IOController:
             file_path, annotated, load_backup = dlg.result
             file_name = os.path.split(file_path)[1]
 
-            self.save_work_button.setEnabled(False)
-            self.change_save_button_folder(annotated)
             controllers = []
             if annotated == 0 or annotated == 1:
                 controllers = [ManualAnnotationController,
@@ -815,7 +827,7 @@ class IOController:
                 controllers = [StateCorrectionController]
                 g.get_states(file_name)
             elif annotated == 3:
-                controllers = [ManualAnnotationController]
+                controllers = [ManualAnnotationControllerVideo]
 
                 pass
 
@@ -839,6 +851,8 @@ class IOController:
             else:
                 g.windows = WindowProcessorStates(file_path, True, load_backup)
 
+            self.save_work_button.setEnabled(False)
+            self.change_save_button_folder(annotated)
             self.current_file_label.setText(f"Current File: {file_name}")
             self.gui.enable_widgets()
 
@@ -861,6 +875,10 @@ class IOController:
             self.save_work_button.clicked.connect(lambda _:
                                                   self.save_finished_progress('Select state data directory',
                                                                               g.settings['stateFinishedPath']))
+        elif annotated == 3:
+            self.save_work_button.clicked.connect(lambda _:
+                                                  self.save_finished_progress('Select kitchen data directory',
+                                                                              g.videos.extract_path))
 
     def save_finished_progress(self, msg, dir_):
         directory = QtWidgets.QFileDialog.getExistingDirectory(self.gui, msg, dir_)

@@ -115,7 +115,7 @@ class Graph:
         graph_type: 'data','class','attribute'
         
         kwargs = {'label','unit','AutoSIPrefix',interval_lines,
-                  'number_classes', 'y_range', 'play_line'}
+                  'number_classes', 'x_range', 'y_range', 'play_line'}
         
         """
 
@@ -153,7 +153,11 @@ class Graph:
             self.play_line = pg.InfiniteLine(0, pen=mkPen(0, 255, 0, 127))
             self.graph.addItem(self.play_line)
 
-            self.graph.setXRange(0, g.data.number_samples, padding=0.02)
+            if 'x_range' in self.kwargs:
+                min_, max_ = self.kwargs["x_range"]
+                self.graph.setXRange(min_, max_, padding=0.02)
+            elif g.data is not None:
+                self.graph.setXRange(0, g.data.number_samples, padding=0.02)
 
         elif self.graph_type == 'attribute':
             if 'label' in self.kwargs.keys():
