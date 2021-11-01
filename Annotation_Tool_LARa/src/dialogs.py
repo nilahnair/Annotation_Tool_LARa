@@ -92,9 +92,9 @@ class SaveAttributesDialog(QtWidgets.QDialog):
     
     example code:
         dlg = saveAttributesDialog(QWidget)
-        result = dlg.exec_()
-    the result will be an integer, see in the method pressedButtons
-    
+        _ = dlg.exec_()
+        result = dlg.result()
+
     """
 
     def __init__(self, parent: QtWidgets.QWidget, selected_attr: list = None):
@@ -122,8 +122,8 @@ class SaveAttributesDialog(QtWidgets.QDialog):
         qbtn = QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
 
         self.buttonBox = QtWidgets.QDialogButtonBox(qbtn)
-        self.buttonBox.accepted.connect(lambda: self.done(self.pressed_buttons()))
-        self.buttonBox.rejected.connect(lambda: self.done(-1))
+        self.buttonBox.accepted.connect(lambda: self.done(1))
+        self.buttonBox.rejected.connect(lambda: self.done(0))
 
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
@@ -132,24 +132,148 @@ class SaveAttributesDialog(QtWidgets.QDialog):
             for i, attr_val in enumerate(selected_attr):
                 self.attributeButtons[i].setChecked(attr_val)
 
-    def pressed_buttons(self) -> int:
+    def result(self) -> int:
         """Checks which buttons are currently checked
         
         Returns:
         --------
         attr_int : int
-            the list of buttons gets transformed into a boolean list 
-            by checking their isChecked() state. This boolean list then gets interpreted 
-            as an integer because QDialog.done(r) asks for integers
-            it can be converted back to a boolean list later when needed
+            the list of buttons gets transformed into a boolean list by checking their isChecked() state.
         --------
         """
         pressed_buttons = []
         for button in self.attributeButtons:
-            pressed_buttons.append(button.isChecked())
+            pressed_buttons.append(button.isChecked() + 0)
+        return pressed_buttons
+
+
+class SaveAttributesDialogKitchen(QtWidgets.QDialog):
+    """Dialog displaying displaying a non-exlusive choice between all attributes
+
+    The attributes are separated into different groups
+
+    example code:
+        dlg = saveAttributesDialog(QWidget)
+        _ = dlg.exec_()
+        result = dlg.result()
+
+    """
+
+    def __init__(self, parent: QtWidgets.QWidget, groups: list, dependencies: dict = None, selected_attr: list = None):
+        """Initializes the dialog and sets up the gui
+
+        Arguments:
+        ----------
+        parent : QWidget
+            parent widget of this dialog
+        groups : list
+            list containing lists of attribute indexes that belong to a group
+        dependencies : dict
+            dictionary keyed with attribute indexes. Each key give back a list of attribute indexes that may be used
+        selected_attr : list (optional)
+            list of booleans with one value per attribute.
+            1 if an attribute is present. 0 if its not.
+            argument is None if no attributes were selected before starting this dialog.
+        ----------
+
+        """
+        super(SaveAttributesDialogKitchen, self).__init__(parent)
+        self.setWindowTitle("Save Attributes")
+
+        self.groups = groups
+        self.dependencies = dependencies
+
+        self.attributeButtons = [QtWidgets.QCheckBox(text) for text in g.attributes]
+        self.setup_dependencies()
+
+        v_layout = QtWidgets.QVBoxLayout()
+        self.setLayout(v_layout)
+
+        attribute_widget = QtWidgets.QWidget(None)
+        v_layout.addWidget(attribute_widget)
+        h_layout = QtWidgets.QHBoxLayout()
+        attribute_widget.setLayout(h_layout)
+
+        for group in groups:
+            scroll_area = QtWidgets.QScrollArea(None)
+            widget = QtWidgets.QWidget(None)
+            v_box = QtWidgets.QVBoxLayout()
+            for attr in group:
+                v_box.addWidget(self.attributeButtons[attr])
+
+            widget.setLayout(v_box)
+            scroll_area.setWidget(widget)
+            h_layout.addWidget(scroll_area)
+
+        qbtn = QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
+        self.buttonBox = QtWidgets.QDialogButtonBox(qbtn)
+        self.buttonBox.accepted.connect(lambda: self.done(1))
+        self.buttonBox.rejected.connect(lambda: self.done(0))
+        v_layout.addWidget(self.buttonBox)
+
+        if selected_attr is not None:
+            for i, attr_val in enumerate(selected_attr):
+                self.attributeButtons[i].setChecked(attr_val)
+
+    def setup_dependencies(self):
+        for group in self.groups[1:]:
+            for j in group:
+                self.attributeButtons[j].setEnabled(False)
+        for i, group in enumerate(self.groups):
+            for j in group:
+                self.attributeButtons[j].clicked.connect(lambda _, g=i, b=j: self.update_dependencies(g, b))
+
+    def update_dependencies(self, group_id, button_id):
+        print(group_id, button_id)
+        # print(g.windows.dataset)
+        for i in self.groups[group_id]:  # Modify buttons in same Group
+            if i == button_id:
+                continue
+            elif g.windows.dataset == "Brownie":  # Consider exceptions because of doubled attributes
+                if button_id in [34, 35] and i in [34, 35]:
+                    continue
+                elif button_id in [53, 54] and i in [53, 54]:
+                    continue
+            elif g.windows.dataset == "Eggs":
+                if button_id in [27, 28] and i in [27, 28]:
+                    continue
+                elif button_id in [29, 30] and i in [29, 30]:
+                    continue
+            elif g.windows.dataset == "Sandwich":
+                if button_id in [10, 11] and i in [10, 11]:
+                    continue
+
+            self.attributeButtons[i].setChecked(False)
+
+        if group_id + 1 == len(self.groups):
+            return  # If group_id is the last group there is no other group that is dependent on it
+
+        for group in self.groups[(group_id + 1):]:  # Modify buttons in next Groups
+            # print(group)
+            for i in group:
+                button = self.attributeButtons[i]
+                button.setEnabled(False)
+                button.setChecked(False)
+
+        for i in self.groups[group_id]:  # Enable dependencies
+            if self.attributeButtons[i].isChecked():
+                for j in self.dependencies[i]:
+                    self.attributeButtons[j].setEnabled(True)
+
+    def result(self) -> list:
+        """Checks which buttons are currently checked
+
+        Returns:
+        --------
+        attr_int : int
+            the list of buttons gets transformed into a boolean list by checking their isChecked() state.
+        --------
+        """
+        pressed_buttons = []
+        for button in self.attributeButtons:
+            pressed_buttons.append(button.isChecked() + 0)
         # print(pressed_buttons)
-        attr_int = sum(2 ** i for i, v in enumerate(reversed(pressed_buttons)) if v)
-        return attr_int
+        return pressed_buttons
 
 
 class SettingsDialog(QtWidgets.QDialog):

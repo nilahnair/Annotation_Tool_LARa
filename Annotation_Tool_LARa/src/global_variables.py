@@ -31,15 +31,44 @@ settings = {'openFilePath': '..' + os.sep + 'unlabeled',
 
 settings_path = '..' + os.sep + 'settings.json'
 
-with open(f'..{os.sep}labels{os.sep}class.txt', 'r') as f:
-    classes = f.read().split(',')
-
-with open(f'..{os.sep}labels{os.sep}attrib.txt', 'r') as f:
-    attributes = f.read().split(',')
-
-attribute_rep = np.loadtxt(f"..{os.sep}labels{os.sep}atts_per_class_dataset.txt", delimiter=",")
-
+classes = None
+attributes = None
+attribute_rep = None
 states = None
+
+
+def get_classes(dataset="LARa"):
+    global classes
+    if dataset == "LARa":
+        with open(f'..{os.sep}labels{os.sep}class.txt', 'r') as f:
+            classes = f.read().split(',')
+    elif "Kitchen" in dataset:
+        classes = ["None", "Error"]
+    else:
+        raise ValueError(f'The dataset "{dataset}" doesn\'t exist')
+
+
+def get_attributes(dataset="LARa"):
+    global attributes
+    global attribute_rep
+    if dataset == "LARa":
+        with open(f'..{os.sep}labels{os.sep}attrib.txt', 'r') as f:
+            attributes = f.read().split(',')
+        attribute_rep = np.loadtxt(f"..{os.sep}labels{os.sep}atts_per_class_dataset.txt", delimiter=",")
+    elif dataset == "Kitchen_Brownies":
+        with open(f"..{os.sep}labels{os.sep}brownie_labels.csv", "rt") as txt:
+            attributes = txt.readline()[3:].split(";")
+        attribute_rep = np.loadtxt(f"..{os.sep}labels{os.sep}brownie_labels.csv", delimiter=";", skiprows=1)
+    elif dataset == "Kitchen_Eggs":
+        with open(f"..{os.sep}labels{os.sep}eggs_labels.csv", "rt") as txt:
+            attributes = txt.readline()[3:].split(";")
+        attribute_rep = np.loadtxt(f"..{os.sep}labels{os.sep}eggs_labels.csv", delimiter=";", skiprows=1)
+    elif dataset == "Kitchen_Sandwich":
+        with open(f"..{os.sep}labels{os.sep}sandwich_labels.csv", "rt") as txt:
+            attributes = txt.readline()[3:].split(";")
+        attribute_rep = np.loadtxt(f"..{os.sep}labels{os.sep}sandwich_labels.csv", delimiter=";", skiprows=1)
+    else:
+        raise ValueError(f'The dataset "{dataset}" doesn\'t exist')
 
 
 def get_states(file_name):
@@ -49,6 +78,9 @@ def get_states(file_name):
         states = file.read().split(',')
         # print(states)
 
+
+get_classes()
+get_attributes()
 
 networks_path = '..' + os.sep + 'networks' + os.sep
 

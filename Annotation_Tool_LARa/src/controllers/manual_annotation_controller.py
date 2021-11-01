@@ -9,7 +9,7 @@ from PyQt5 import QtWidgets, QtGui
 from os import sep
 import pyqtgraph as pg
 
-from dialogs import SaveClassesDialog, SaveAttributesDialog
+from dialogs import SaveClassesDialog, SaveAttributesDialog, SaveAttributesDialogKitchen
 
 from .controller import Controller, Graph
 
@@ -34,7 +34,7 @@ class ManualAnnotationController(Controller):
 
         self.save_labels_button = self.widget.findChild(QtWidgets.QPushButton, 'saveLabelsButton')
         self.save_labels_button.clicked.connect(lambda _: self.gui.pause())
-        self.save_labels_button.clicked.connect(lambda _: self.saveLabel())
+        self.save_labels_button.clicked.connect(lambda _: self.save_label())
 
         self.verify_labels_button = self.widget.findChild(QtWidgets.QPushButton, 'verifyLabelsButton')
         self.verify_labels_button.clicked.connect(lambda _: self.gui.pause())
@@ -129,9 +129,9 @@ class ManualAnnotationController(Controller):
         window_index = self.class_window_index(frame)
         if self.current_window != window_index:
             self.current_window = window_index
-            self.highlight_class_bar(window_index)
+            self.highlight_class_bar(window_index, )
 
-    def highlight_class_bar(self, bar_index):
+    def highlight_class_bar(self, bar_index, **kwargs):
         colors = Controller.highlight_class_bar(self, bar_index)
 
         self.class_graph.color_class_bars(colors)
@@ -141,7 +141,7 @@ class ManualAnnotationController(Controller):
         for graph in self.joint_graphs:
             graph.update_frame_lines(start, end, play)
 
-    def saveLabel(self):
+    def save_label(self):
         # print("save")
         start = int(self.start_line_edit.text())
         end = int(self.end_line_edit.text())
@@ -155,7 +155,7 @@ class ManualAnnotationController(Controller):
                     format_string = '{0:0' + str(len(g.attributes)) + 'b}'
                     attributes = [(x == '1') + 0 for x in list(format_string.format(attribute_int))]
                     g.windows.save_window(start - 1, end, class_index,
-                                       attributes)  # Subtracting 1 from start to index windows from 0.
+                                          attributes)  # Subtracting 1 from start to index windows from 0.
                     # End is the same because indexing a:b is equivalent to [a,b[.
                     self.start_line_edit.setText(str(end + 1))  # End+1 because next window will save as start-1=end.
                     self.end_line_edit.setText(str(end + 1))
@@ -259,9 +259,12 @@ class ManualAnnotationControllerVideo(Controller):
         self.set_current_frame_button.clicked.connect(lambda _: self.updateEndLineEdit(None))
         self.end_line_edit.returnPressed.connect(lambda: self.updateEndLineEdit(self.end_line_edit.text()))
 
+        self.set_video_end_button = self.widget.findChild(QtWidgets.QPushButton, 'setToEndButton')
+        self.set_video_end_button.clicked.connect(lambda _: self.updateEndLineEdit(g.videos.video_length))
+
         self.save_labels_button = self.widget.findChild(QtWidgets.QPushButton, 'saveLabelsButton')
         self.save_labels_button.clicked.connect(lambda _: self.gui.pause())
-        self.save_labels_button.clicked.connect(lambda _: self.saveLabel())
+        self.save_labels_button.clicked.connect(lambda _: self.save_label())
 
         self.verify_labels_button = self.widget.findChild(QtWidgets.QPushButton, 'verifyLabelsButton')
         self.verify_labels_button.clicked.connect(lambda _: self.gui.pause())
@@ -270,14 +273,15 @@ class ManualAnnotationControllerVideo(Controller):
         self.class_graph = self.widget.findChild(pg.PlotWidget, 'classGraph')
 
         self.status_window = self.widget.findChild(QtWidgets.QTextEdit, 'ma_statusWindow')
-        #self.add_status_message("Please read the Annotation Guidelines before beginning.")
-        #self.add_status_message("If you already did start by opening a new unlabeled file or loading your progress.")
+        # self.add_status_message("Please read the Annotation Guidelines before beginning.")
+        # self.add_status_message("If you already did start by opening a new unlabeled file or loading your progress.")
 
     def enable_widgets(self):
         if self.enabled is False:
             # self.startLineEdit.setEnabled(True) #Stays disabled since start is always next unlabeled frame.
             self.end_line_edit.setEnabled(True)
             self.set_current_frame_button.setEnabled(True)
+            self.set_video_end_button.setEnabled(True)
             self.save_labels_button.setEnabled(True)
             self.verify_labels_button.setEnabled(True)
 
@@ -307,7 +311,7 @@ class ManualAnnotationControllerVideo(Controller):
         """
 
         self.class_graph.reload_classes(g.windows.windows)
-
+        self.highlight_class_bar(None)
         if self.enabled and len(g.windows.windows) > 0:
             start = g.windows.windows[-1][1] + 1
             self.start_line_edit.setText(str(start))
@@ -323,36 +327,31 @@ class ManualAnnotationControllerVideo(Controller):
                 self.current_window = window_index
                 self.highlight_class_bar(window_index)
 
-    def highlight_class_bar(self, bar_index):
-        colors = Controller.highlight_class_bar(self, bar_index)
+    def highlight_class_bar(self, bar_index, **kwargs):
+        colors = Controller.highlight_class_bar(self, bar_index,
+                                                error_function=lambda window: window[2])
 
         self.class_graph.color_class_bars(colors)
 
     def update_frame_lines(self, start=None, end=None, play=None):
         self.class_graph.update_frame_lines(start, end, play)
 
-
-    def saveLabel(self):
+    def save_label(self):
         # print("save")
         start = int(self.start_line_edit.text())
         end = int(self.end_line_edit.text())
         if start + 50 < end or end == g.videos.video_length:
-            dlg = SaveClassesDialog(self.gui)
-            class_index = dlg.exec_()
-            if class_index > -1:
-                dlg = SaveAttributesDialog(self.gui)
-                attribute_int = dlg.exec_()
-                if attribute_int > -1:
-                    format_string = '{0:0' + str(len(g.attributes)) + 'b}'
-                    attributes = [(x == '1') + 0 for x in list(format_string.format(attribute_int))]
-                    g.windows.save_window(start - 1, end, class_index,
-                                          attributes)  # Subtracting 1 from start to index windows from 0.
-                    # End is the same because indexing a:b is equivalent to [a,b[.
-                    self.start_line_edit.setText(str(end + 1))  # End+1 because next window will save as start-1=end.
-                    self.end_line_edit.setText(str(end + 1))
+            dlg = SaveAttributesDialogKitchen(self.gui, g.windows.attribute_groups, g.windows.dependencies)
+            attribute_int = dlg.exec_()
+            if attribute_int:
+                attributes = dlg.result()
+                g.windows.save_window(start - 1, end, 0, attributes)  # Subtracting 1 from start to index windows from 0
+                # End is the same because indexing a:b is equivalent to [a,b[.
+                self.start_line_edit.setText(str(end + 1))  # End+1 because next window will save as start-1=end.
+                self.end_line_edit.setText(str(end + 1))
 
-                    self.class_graph.add_class(start, end, class_index, attributes)
-                    self.update_frame_lines(end, end, self.gui.get_current_frame())
+                self.class_graph.add_class(start, end, 0, attributes)
+                self.update_frame_lines(end, end, self.gui.get_current_frame())
 
         else:
             self.add_status_message(

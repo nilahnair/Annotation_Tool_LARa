@@ -356,6 +356,7 @@ class WindowProcessor:
         self.file_name = raw_data_name
         # print("self.file_name: "+self.file_name)
         backup_path = f'{g.settings["backUpPath"]}{os.sep}{self.file_name.split(".")[0]}_backup.txt'
+
         if not load_backup:
             if annotated:
                 self.load_annotations(file_path)
@@ -792,28 +793,185 @@ class WindowProcessorStates(WindowProcessor):
         self.save_windows(directory, annotator_suffix[1:] + '_windows')
 
 
+class WindowProcessorKitchen(WindowProcessor):
+    def __init__(self, file_path, annotated, load_backup=False):
+        super(WindowProcessorKitchen, self).__init__(file_path, annotated, load_backup)
+        with open(os.path.join(g.videos.extract_path, g.videos.sync_names[0]), "rt") as txt:
+            lines = txt.readlines()
+            times = [time(*[int(a) for a in lines[i].split(" ")[-1][:-2].split("_")]) for i in range(len(lines))]
+            start_time = time_to_milliseconds(times[0])
+            times = [time_to_milliseconds(t) - start_time for t in times]
+            frames = [lines[i].split(" ")[0].split(":")[1] for i in range(len(lines))]
+            self.sync = [a for a in zip(times, frames)]
+
+        self.dataset = "Brownie" if "Brownie" in self.file_name else \
+            "Eggs" if "Eggs" in self.file_name else \
+                "Sandwich"
+
+        class_indexes = [i for i in range(len(g.attributes)) if "C_" in g.attributes[i]]
+        akkusativ_indexes = [i for i in range(len(g.attributes)) if "A_" in g.attributes[i]]
+        dativ_indexes = [i for i in range(len(g.attributes)) if "D_" in g.attributes[i]]
+        dativ2_indexes = [i for i in range(len(g.attributes)) if "D2_" in g.attributes[i]]
+        frequency_indexes = [i for i in range(len(g.attributes)) if "F_" in g.attributes[i]]
+        self.attribute_groups = [class_indexes, akkusativ_indexes, dativ_indexes, dativ2_indexes, frequency_indexes]
+        self.dependencies = {}
+        for attributes1, attributes2 in [(class_indexes, akkusativ_indexes), (class_indexes, frequency_indexes),
+                                         (akkusativ_indexes, dativ_indexes), (akkusativ_indexes, frequency_indexes),
+                                         (dativ_indexes, dativ2_indexes), (dativ_indexes, frequency_indexes),
+                                         (dativ2_indexes, frequency_indexes), (frequency_indexes,[])]:
+            for attr_k in attributes1:
+                if attr_k not in self.dependencies.keys():
+                    self.dependencies[attr_k] = []
+                for attr_v in attributes2:
+                    if g.attribute_rep[attr_k, attr_v] > 0:
+                        self.dependencies[attr_k].append(attr_v)
+
+
+    def close(self):
+        super(WindowProcessorKitchen, self).close()
+
+
+    def save_results(self, directory: str, annotator_id: int, tries: int):
+        """Saves the finished labels, normalized data, and windows in 3 files in the provided directory
+
+        Arguments:
+        ----------
+        directory : str
+            path to the directory where the results should be saved.
+        annotator_id : int
+            ID of the person annonating the dataset.
+        tries : int
+            number indicating how often the currently worked on file
+            was beeing annotated by the same annotator.
+        ----------
+
+        """
+        annotator_suffix = f'_A' + '%0.2d' % (int(annotator_id)) + '_N' + '%0.2d' % (int(tries))
+
+        # --------------------------------------------------------------------------------------
+        # First file: the backup with the windows.
+        # --------------------------------------------------------------------------------------
+        self.save_windows(directory, annotator_suffix[1:] + '_windows')
+
+        # --------------------------------------------------------------------------------------
+        # Second file: The result in the format of the Kitchen dataset.
+        # --------------------------------------------------------------------------------------
+
+        # Format:
+        # annotator | datetime | annotation | file annotated | start/end/position in file
+        annotations = self.windows_to_annotations()
+        dt = datetime.datetime.now()
+        file_annotated = self.file_name[:-6]  # Remove _video from name
+
+        with open(os.path.join(g.videos.extract_path, self.file_name + annotator_suffix + ".txt"), "wt") as txt:
+            for annotation, position in annotations:
+                txt.write(f"A{int(annotator_id):02}|{dt}|{annotation}|{file_annotated}|{position}\n")
+
+
+    def windows_to_annotations(self):
+        annotations = []
+        for start, end, _, attr in self.windows:
+            annotation = ""
+            for i in range(len(attr)):
+                if self.dataset == "Brownie":  # exceptions because of doubled attributes
+                    if i == 34 and (attr[34] or attr[35]):
+                        attribute = g.attributes[i]
+                        annotation += ("-2-" if attr[34] and attr[35] else
+                                       "-1-") + \
+                                      (attribute[3:] if "D2_" in attribute else attribute[2:])
+                        continue
+                    elif i == 35:
+                        continue
+                    elif i == 53 and (attr[53] or attr[54]):
+                        attribute = g.attributes[i]
+                        annotation += ("-2-" if attr[53] and attr[54] else "-1-") + \
+                                      (attribute[3:] if "D2_" in attribute else attribute[2:])
+                        continue
+                    elif i == 54:
+                        continue
+                elif g.windows.dataset == "Eggs":
+                    if i == 27 and (attr[27] or attr[28]):
+                        attribute = g.attributes[i]
+                        annotation += ("-2-" if attr[27] and attr[28] else "-1-") + \
+                                      (attribute[3:] if "D2_" in attribute else attribute[2:])
+                        continue
+                    elif i == 28:
+                        continue
+                    elif i == 29 and (attr[29] or attr[30]):
+                        attribute = g.attributes[i]
+                        annotation += ("-2-" if attr[29] and attr[30] else "-1-") + \
+                                      (attribute[3:] if "D2_" in attribute else attribute[2:])
+                        continue
+                    elif i == 30:
+                        continue
+                    elif i == 40:
+                        attribute = g.attributes[i]
+                        annotation += "-1-" + (attribute[3:] if "D2_" in attribute else attribute[2:])
+                        continue
+                elif g.windows.dataset == "Sandwich":
+                    if i == 10 and (attr[10] or attr[11]):
+                        attribute = g.attributes[i]
+                        annotation += ("-2-" if attr[10] and attr[11] else "-1-") + \
+                                      (attribute[3:] if "D2_" in attribute else attribute[2:])
+                        continue
+                    elif i == 11:
+                        continue
+                    elif i == 32:
+                        attribute = g.attributes[i]
+                        annotation += "-1-" + (attribute[3:] if "D2_" in attribute else attribute[2:])
+                        continue
+                    elif i == 39:
+                        attribute = g.attributes[i]
+                        annotation += "-1-" + (attribute[3:] if "D2_" in attribute else attribute[2:])
+                        continue
+                if attr[i] == 0:
+                    continue
+                else:
+                    attribute = g.attributes[i]
+                    annotation += "-" + (attribute[3:] if "D2_" in attribute else attribute[2:])
+
+            start_position = self.time_to_frame(start)
+            end_position = self.time_to_frame(end)
+            position_in_file = start_position + "," + end_position
+
+            annotations.append((annotation[1:], position_in_file))
+
+        return annotations
+
+
+    def time_to_frame(self, ms):
+        min_i = sorted(range(len(self.sync)), key=lambda x: abs(ms - self.sync[x][0]))[0]
+        return self.sync[min_i][1]
+
+
+def time_to_milliseconds(time_: time):
+    seconds = (time_.minute * 60) + time_.second
+    milliseconds = (seconds * 1000) + (time_.microsecond // 1000)
+    return milliseconds
+
+
 class KitchenVideoProcessor:
     """"""
 
     def __init__(self, path: str):
         """"""
         self.videos = []  # (name, QMediaContent, offset, length in ms)
+        self.extract_path = os.path.splitext(path)[0]
 
         with ZipFile(path, 'r') as zip_file:
             # zip_file.printdir()
             contents = zip_file.namelist()
-            self.extract_path = os.path.splitext(path)[0]
             zip_file.extractall(path=self.extract_path)
 
             video_names = [name for name in contents if ".avi" in name and "7150991" in name]
-            sync_names = [name for name in contents if ".txt" in name and "7150991" in name]
+            self.sync_names = [name for name in contents if ".txt" in name and "7150991" in name]
             for video_name in video_names:
                 name = video_name.split("_")[2].split("-")[0]
                 video = QMediaContent(QUrl.fromLocalFile(os.path.join(self.extract_path, video_name)))
-                sync = [n for n in sync_names if name in n][0]
+                sync = [n for n in self.sync_names if name in n][0]
                 self.videos.append((name, video, sync))
             # shutil.rmtree(self.extract_path)
-            sync_info = self.check_sync(sync_names)
+            sync_info = self.check_sync(self.sync_names)
             print(sync_info)
             for i, video_info in enumerate(self.videos):
                 name, video, sync = video_info
@@ -847,22 +1005,13 @@ class KitchenVideoProcessor:
                 print("before:", len(times))
                 filtered_times = [time_ for time_ in times if latest_start <= time_ <= earliest_end]
                 print("after:", len(filtered_times))
-                abs_milliseconds = [self.time_to_milliseconds(time_) for time_ in filtered_times]
+                abs_milliseconds = [time_to_milliseconds(time_) for time_ in filtered_times]
                 milliseconds = [ms - abs_milliseconds[0] for ms in abs_milliseconds]
-                offset = abs_milliseconds[0] - self.time_to_milliseconds(times[0])
+                offset = abs_milliseconds[0] - time_to_milliseconds(times[0])
                 print(milliseconds[0], offset, milliseconds[-1])
 
                 offsets[sync_file] = (offset, milliseconds[-1])
         return offsets
-
-    def time_to_milliseconds(self, time_: time):
-        seconds = (time_.minute * 60) + time_.second
-        milliseconds = (seconds * 1000) + (time_.microsecond // 1000)
-        return milliseconds
-
-    def close(self):
-        del self.videos
-        shutil.rmtree(self.extract_path)
 
 
 class SlidingWindowDataset(Dataset):

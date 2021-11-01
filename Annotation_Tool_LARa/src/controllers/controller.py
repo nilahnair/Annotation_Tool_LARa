@@ -58,7 +58,7 @@ class Controller:
                 return i
         return -1
 
-    def highlight_class_bar(self, bar_index):
+    def highlight_class_bar(self, bar_index, error_function=lambda window: window[3][-1]):
         """Generates a list of colors for use in class_graphs
         
         When using this method in subclasses of controller: 
@@ -73,16 +73,16 @@ class Controller:
 
         colors = []
         for i in range(num_windows):
-            if g.windows.windows[i][3][-1] == 0:
-                colors.append(normal_color)
-            else:
+            if error_function(g.windows.windows[i]):
                 colors.append(error_color)
+            else:
+                colors.append(normal_color)
 
         if bar_index is not None:
-            if g.windows.windows[bar_index][3][-1] == 0:
-                colors[bar_index] = selected_color
-            else:
+            if error_function(g.windows.windows[bar_index]):
                 colors[bar_index] = selected_error_color
+            else:
+                colors[bar_index] = selected_color
         return colors
 
 
@@ -202,7 +202,6 @@ class Graph:
             if ('play_line', True) in self.kwargs.items():
                 self.play_line = pg.InfiniteLine(0, pen=mkPen(0, 255, 0, 127))
                 self.graph.addItem(self.play_line)
-
 
         if "y_range" in self.kwargs.keys():
             min_, max_ = self.kwargs["y_range"]

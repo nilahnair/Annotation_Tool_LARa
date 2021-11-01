@@ -19,7 +19,8 @@ import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 
 from controllers import *
-from data_management import DataProcessor, WindowProcessor, WindowProcessorStates, KitchenVideoProcessor
+from data_management import DataProcessor, WindowProcessor, WindowProcessorStates, KitchenVideoProcessor, \
+    WindowProcessorKitchen
 from dialogs import EnterIDDialog, SettingsDialog, OpenFileDialog
 
 import global_variables as g
@@ -152,6 +153,7 @@ class GUI(QtWidgets.QMainWindow):
         # print("pause")
         self.playback_controller.pause()
 
+    """
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         if g.videos is not None:
             vpbc: VideoPlaybackController = self.playback_controller
@@ -159,6 +161,7 @@ class GUI(QtWidgets.QMainWindow):
             g.videos.close()
 
         super(GUI, self).closeEvent(a0)
+    """
 
     def eventFilter(self, _, event):
         if event.type() == QEvent.KeyPress:
@@ -475,10 +478,12 @@ class VideoPlaybackController:
         self.player.setVideoOutput(self.gui.findChild(QtMultimediaWidgets.QVideoWidget, "videoWidget"))
         self.player.positionChanged.connect(lambda _: self.frame_changed("video"))
 
+
         self.dropdown: QtWidgets.QComboBox = self.gui.findChild(QtWidgets.QComboBox, "views_comboBox")
         self.dropdown.addItems([name for name, _, _, _ in g.videos.videos])
         self.dropdown.currentIndexChanged.connect(self.change_video)
         self.change_video(0)
+
 
     def enable_widgets(self):
         if self.enabled is False:
@@ -573,7 +578,7 @@ class VideoPlaybackController:
         self.play_button.setText("Play")
         # self.timer.stop()
         self.player.pause()
-        print("paused at positon:", self.player.position())
+        #print("paused at positon:", self.player.position())
 
     def play(self):
         self.paused = False
@@ -631,7 +636,7 @@ class VideoPlaybackController:
         # self.player.setPosition(new_position)
         self.current_video_index = index
 
-        # self.player.play()
+        self.player.pause()
 
 
 class SkeletonGraphController:
@@ -818,19 +823,29 @@ class IOController:
 
             controllers = []
             if annotated == 0 or annotated == 1:
+                g.get_attributes("LARa")
                 controllers = [ManualAnnotationController,
                                LabelCorrectionController,
                                AutomaticAnnotationController,
                                PredictionRevisionController,
                                RetrievalController]
             elif annotated == 2:
+                g.get_classes("LARa")
+                g.get_attributes("LARa")
                 controllers = [StateCorrectionController]
                 g.get_states(file_name)
             elif annotated == 3:
-                controllers = [ManualAnnotationControllerVideo]
-
-                pass
-
+                if "Brownie" in file_name:
+                    g.get_classes("Kitchen_Brownies")
+                    g.get_attributes("Kitchen_Brownies")
+                elif "Eggs" in file_name:
+                    g.get_classes("Kitchen_Eggs")
+                    g.get_attributes("Kitchen_Eggs")
+                elif "Sandwich" in file_name:
+                    g.get_classes("Kitchen_Sandwich")
+                    g.get_attributes("Kitchen_Sandwich")
+                controllers = [ManualAnnotationControllerVideo,
+                               LabelCorrectionControllerVideo]
             self.gui.enabled = False
             self.gui.change_setup(controllers)
             if g.windows is not None:
@@ -846,10 +861,12 @@ class IOController:
                 g.videos = KitchenVideoProcessor(file_path)
                 self.gui.change_video_type("video")
 
-            if annotated != 2:
-                g.windows = WindowProcessor(file_path, annotated > 0, load_backup)
-            else:
+            if annotated < 2:
+                g.windows = WindowProcessor(file_path, 0 < annotated, load_backup)
+            elif annotated == 2:
                 g.windows = WindowProcessorStates(file_path, True, load_backup)
+            elif annotated == 3:
+                g.windows = WindowProcessorKitchen(file_path, False, load_backup)
 
             self.save_work_button.setEnabled(False)
             self.change_save_button_folder(annotated)
