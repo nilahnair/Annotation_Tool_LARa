@@ -16,8 +16,9 @@ The two types of attribute representation was created based on the recording pro
 LARa Recording Protocol:
 
 | Subject | Sex | Age | Weight | Height | Handedness |
+| ------- |:---:|:---:|:------:|:------:|:----------:|
 |         |[F/M]|     |  [kg]  |  [cm]  |   [L/R]    |
-| ------- |:---:| ---:| ------:| ------:| ----------:|
+| ------- |:---:|:---:|:------:|:------:|:----------:|
 |   07    |  M  |  23 |   65   |   177  |     R      |
 |   08    |  F  |  51 |   68   |   168  |     R      |
 |   09    |  M  |  35 |  100   |   172  |     R      |
