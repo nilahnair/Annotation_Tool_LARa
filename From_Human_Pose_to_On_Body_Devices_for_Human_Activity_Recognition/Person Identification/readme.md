@@ -1,8 +1,8 @@
 **Person Identification using Motion Information**
 
-This project is focused on experimenting with datasets created for Human Activity Recognition (HAR), to identify whether the individual can be recognised irrespective of the activity being performed. In addition, the impact of activities, that were present in the dataset, on the identification accuracy was tested. Furthermore, the project attempted to make use of soft-biometrics such as age, gender, height, and weight, to create an attribute representation. 
+This project is focused on experimenting with datasets created for Human Activity Recognition (HAR), to identify whether the individuals can be recognised irrespective of the activity being performed. In addition, the impact of activities, that were present in the dataset, on the identification accuracy was tested. Furthermore, the project attempted to make use of soft-biometrics such as age, gender, height, and weight, to create an attribute representation. 
 
-The three datasets that are used for experimentation are:
+The three datasets that were used for experimentation are:
 1. LARa
 2. OPPORTUNITY
 3. PAMAP2
@@ -11,7 +11,7 @@ The networks that were used for experimentation are:
 1. tCNN-IMU
 2. deepCNNLSTM
 
-The two types of attribute representation was created based on the recording protocol of LARa dataset. Only the subjects with IMU data were considered. 
+Two types of attribute representation were created based on the recording protocol of LARa dataset. Only the subjects with IMU data were considered. 
 
 LARa Recording Protocol:
 
@@ -27,7 +27,7 @@ LARa Recording Protocol:
 |   13    |  F  |  25 |   54   |   163  |     R      |
 |   14    |  M  |  54 |   90   |   177  |     R      |
 
-Attribute Representation 
+Attribute Representation:
 
 Type 1:
 
@@ -61,12 +61,12 @@ Where:
   W: Weight
   H: Height
   
-  It can be noticed that some individuals have the same attribute representation. For example in Type 1 attribute representation, subject 5 and 6 have the same representation, and 3 and 7 too have the same attribute representation. As a result, the representations are considered to be centers and each indiviudal is assigned to the centers based on their attribute representation, as shown in the Figure:
+It can be noticed that some individuals have the same attribute representation. For example in Type 1 attribute representation, subject 5 and 6 have the same representation, and 3 and 7 too have the same attribute representation. As a result, the representations are considered to be centers and each indiviudal is assigned to the centers based on their attribute representation, as shown in the Figure below. 
   
 <p align="center">
   <img src="https://github.com/nilahnair/Annotation_Tool_LARa/blob/master/From_Human_Pose_to_On_Body_Devices_for_Human_Activity_Recognition/Person%20Identification/Images/center.PNG" width="350" title="Type 1 subjects assigned to the centers">
 </p>
- 
-![alt text] (https://github.com/nilahnair/Annotation_Tool_LARa/blob/master/From_Human_Pose_to_On_Body_Devices_for_Human_Activity_Recognition/Person%20Identification/Images/center.PNG "Type 1 subjects assigned to the centers")
 
+
+ 
 
