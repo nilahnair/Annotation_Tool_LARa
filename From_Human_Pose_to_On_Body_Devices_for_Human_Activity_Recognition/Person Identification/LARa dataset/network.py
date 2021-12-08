@@ -4,7 +4,7 @@ Created on Sat Mar 13 14:03:18 2021
 
 modified from the code of fernando moya
 
-@author: nilah
+@author: nilah nair
 """
 
 from __future__ import print_function
@@ -295,24 +295,148 @@ class Network(nn.Module):
                 elif self.config["NB_sensor_channels"] == 126:
                     self.fc3_RL = nn.Linear(self.config['num_filters'] * int(Wx) * 24, 256)
                     
+         # set the Conv layers
+        if self.config["network"] == "lstm":
+            # LA
+            self.conv_LA_1_1 = nn.Conv2d(in_channels=in_channels,
+                                     out_channels=self.config['num_filters'],
+                                     kernel_size=(self.config['filter_size'], 1),
+                                     stride=1, padding=padding)
+
+            self.conv_LA_1_2 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+            self.conv_LA_2_1 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+            self.conv_LA_2_2 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+           
+            # LL
+            self.conv_LL_1_1 = nn.Conv2d(in_channels=in_channels,
+                                     out_channels=self.config['num_filters'],
+                                     kernel_size=(self.config['filter_size'], 1),
+                                     stride=1, padding=padding)
+
+            self.conv_LL_1_2 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+            self.conv_LL_2_1 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+            self.conv_LL_2_2 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+            
+            
+            # N
+            self.conv_N_1_1 = nn.Conv2d(in_channels=in_channels,
+                                     out_channels=self.config['num_filters'],
+                                     kernel_size=(self.config['filter_size'], 1),
+                                     stride=1, padding=padding)
+
+            self.conv_N_1_2 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+            self.conv_N_2_1 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+            self.conv_N_2_2 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+
+            # RA
+            self.conv_RA_1_1 = nn.Conv2d(in_channels=in_channels,
+                                     out_channels=self.config['num_filters'],
+                                     kernel_size=(self.config['filter_size'], 1),
+                                     stride=1, padding=padding)
+
+            self.conv_RA_1_2 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+            self.conv_RA_2_1 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+            self.conv_RA_2_2 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+            
+            # RL
+            self.conv_RL_1_1 = nn.Conv2d(in_channels=in_channels,
+                                     out_channels=self.config['num_filters'],
+                                     kernel_size=(self.config['filter_size'], 1),
+                                     stride=1, padding=padding)
+
+            self.conv_RL_1_2 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+            self.conv_RL_2_1 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+            self.conv_RL_2_2 = nn.Conv2d(in_channels=self.config['num_filters'],
+                                          out_channels=self.config['num_filters'],
+                                          kernel_size=(self.config['filter_size'], 1),
+                                          stride=1, padding=padding)
+
+        
+        if self.config["NB_sensor_channels"] == 27:
+            self.fc3 = nn.LSTM(input_size=(self.config['num_filters']*int(self.config['NB_sensor_channels'])),hidden_size= 256, num_layers=2, batch_first=True)
+            
+        elif self.config["NB_sensor_channels"] == 30:
+            self.fc3 = nn.LSTM(input_size=(self.config['num_filters']*int(self.config['NB_sensor_channels'])), hidden_size= 256, dropout=0.5, num_layers=2, batch_first=True)
+            
+            
+        elif self.config["NB_sensor_channels"] == 126:
+            self.fc3 = nn.LSTM(input_size=(self.config['num_filters']*126),hidden_size= 256, num_layers=2, batch_first=True)
+            
+        
         # MLP
-        if self.config["fully_convolutional"] == "FCN":
-            if self.config["network"] == "cnn":
-                self.fc4 = nn.Conv2d(in_channels=256,
-                                     out_channels=256, kernel_size=(1, 1), stride=1, padding=0)
-            elif self.config["network"] == "cnn_imu" and self.config["NB_sensor_channels"] in [30, 126]:
-                self.fc4 = nn.Conv2d(in_channels=256 * 5,
-                                     out_channels=256, kernel_size=(1, 1), stride=1, padding=0)
-            elif self.config["network"] == "cnn_imu" and self.config["NB_sensor_channels"] == 27:
-                self.fc4 = nn.Conv2d(in_channels=256 * 3,
-                                     out_channels=256, kernel_size=(1, 1), stride=1, padding=0)
-        elif self.config["fully_convolutional"] == "FC":
-            if self.config["network"] == "cnn":
-                self.fc4 = nn.Linear(256, 256)
-            elif self.config["network"] == "cnn_imu" and self.config["NB_sensor_channels"] in [30, 126]:
-                self.fc4 = nn.Linear(256 * 5, 256)
-            elif self.config["network"] == "cnn_imu" and self.config["NB_sensor_channels"] == 27:
-                self.fc4 = nn.Linear(256 * 3, 256)
+        if self.config["network"] == "cnn" or self.config["network"]=="cnn_imu":
+            if self.config["fully_convolutional"] == "FCN":
+                if self.config["network"] == "cnn":
+                    self.fc4 = nn.Conv2d(in_channels=256,
+                                         out_channels=256, kernel_size=(1, 1), stride=1, padding=0)
+                elif self.config["network"] == "cnn_imu" and self.config["NB_sensor_channels"] in [30, 126]:
+                    self.fc4 = nn.Conv2d(in_channels=256 * 5,
+                                         out_channels=256, kernel_size=(1, 1), stride=1, padding=0)
+                elif self.config["network"] == "cnn_imu" and self.config["NB_sensor_channels"] == 27:
+                    self.fc4 = nn.Conv2d(in_channels=256 * 3,
+                                         out_channels=256, kernel_size=(1, 1), stride=1, padding=0)
+            elif self.config["fully_convolutional"] == "FC":
+                if self.config["network"] == "cnn":
+                    self.fc4 = nn.Linear(256, 256)
+                elif self.config["network"] == "cnn_imu" and self.config["NB_sensor_channels"] in [30, 126]:
+                    self.fc4 = nn.Linear(256 * 5, 256)
+                elif self.config["network"] == "cnn_imu" and self.config["NB_sensor_channels"] == 27:
+                    self.fc4 = nn.Linear(256 * 3, 256)
 
         if self.config["fully_convolutional"] == "FCN":
             if self.config['output'] == 'softmax':
@@ -361,21 +485,30 @@ class Network(nn.Module):
             else:
                 x_LA, x_LL, x_N, x_RA, x_RL = self.tcnn_imu(x)
                 x = torch.cat((x_LA, x_LL, x_N, x_RA, x_RL), 1)
+        elif self.config["network"] == "lstm":
+            x_LA, x_LL, x_N, x_RA, x_RL = self.tcnn_imu(x)
+            x = torch.cat((x_LA, x_LL, x_N, x_RA, x_RL), 2)
+            x, _ = self.fc3(x)
+            x = F.dropout(x, training=self.training)
+            x= x[:,-1,:]
+            x = self.fc5(x)
+            
                 
         # Selecting MLP, either FC or FCN
-        if self.config["fully_convolutional"] == "FCN":
-            x = F.dropout(x, training=self.training)
-            x = F.relu(self.fc4(x))
-            x = F.dropout(x, training=self.training)
-            x = self.fc5(x)
-            x = self.avgpool(x)
-            x = x.view(x.size()[0], x.size()[1], x.size()[2])
-            x = x.permute(0, 2, 1)
-        elif self.config["fully_convolutional"] == "FC":
-            x = F.dropout(x, training=self.training)
-            x = F.relu(self.fc4(x))
-            x = F.dropout(x, training=self.training)
-            x = self.fc5(x)
+        if self.config["network"] == "cnn" or self.config["network"] == "cnn_imu":
+            if self.config["fully_convolutional"] == "FCN":
+                x = F.dropout(x, training=self.training)
+                x = F.relu(self.fc4(x))
+                x = F.dropout(x, training=self.training)
+                x = self.fc5(x)
+                x = self.avgpool(x)
+                x = x.view(x.size()[0], x.size()[1], x.size()[2])
+                x = x.permute(0, 2, 1)
+            elif self.config["fully_convolutional"] == "FC":
+                x = F.dropout(x, training=self.training)
+                x = F.relu(self.fc4(x))
+                x = F.dropout(x, training=self.training)
+                x = self.fc5(x)
             
         if self.config['output'] == 'attribute':
             x = self.sigmoid(x)
@@ -510,10 +643,14 @@ class Network(nn.Module):
         x_LA = F.relu(self.conv_LA_1_2(x_LA))
         x_LA = F.relu(self.conv_LA_2_1(x_LA))
         x_LA = F.relu(self.conv_LA_2_2(x_LA))
+        
         # view is reshape
-        x_LA = x_LA.reshape(-1, x_LA.size()[1] * x_LA.size()[2] * x_LA.size()[3])
-        x_LA = F.relu(self.fc3_LA(x_LA))
-
+        if self.config["network"] == "cnn_imu":
+            x_LA = x_LA.reshape(-1, x_LA.size()[1] * x_LA.size()[2] * x_LA.size()[3])
+            x_LA = F.relu(self.fc3_LA(x_LA))
+        elif self.config["network"] == "lstm":
+            x_LA = x_LA.reshape(x_LA.size()[0], -1,  x_LA.size()[1]*x_LA.size()[3])
+        
         # LL
         if self.config["NB_sensor_channels"] in [30, 126]:
             if self.config["reshape_input"]:
@@ -534,10 +671,14 @@ class Network(nn.Module):
             x_LL = F.relu(self.conv_LL_1_2(x_LL))
             x_LL = F.relu(self.conv_LL_2_1(x_LL))
             x_LL = F.relu(self.conv_LL_2_2(x_LL))
+            
             # view is reshape
-            x_LL = x_LL.reshape(-1, x_LL.size()[1] * x_LL.size()[2] * x_LL.size()[3])
-            x_LL = F.relu(self.fc3_LL(x_LL))
-
+            if self.config["network"] == "cnn_imu":
+                x_LL = x_LL.reshape(-1, x_LL.size()[1] * x_LL.size()[2] * x_LL.size()[3])
+                x_LL = F.relu(self.fc3_LL(x_LL))
+            elif self.config["network"] == "lstm":
+                x_LL = x_LL.reshape(x_LL.size()[0], -1, x_LL.size()[1] * x_LL.size()[3])
+            
         # N
         if self.config["reshape_input"]:
             if self.config["NB_sensor_channels"] == 27:
@@ -560,10 +701,14 @@ class Network(nn.Module):
         x_N = F.relu(self.conv_N_1_2(x_N))
         x_N = F.relu(self.conv_N_2_1(x_N))
         x_N = F.relu(self.conv_N_2_2(x_N))
+        
         # view is reshape
-        x_N = x_N.reshape(-1, x_N.size()[1] * x_N.size()[2] * x_N.size()[3])
-        x_N = F.relu(self.fc3_N(x_N))
-
+        if self.config["network"] == "cnn_imu":
+            x_N = x_N.reshape(-1, x_N.size()[1] * x_N.size()[2] * x_N.size()[3])
+            x_N = F.relu(self.fc3_N(x_N))
+        elif self.config["network"] == "lstm":
+            x_N = x_N.reshape(x_N.size()[0], -1, x_N.size()[1] * x_N.size()[3])
+           
         # RA
         if self.config["reshape_input"]:
             if self.config["NB_sensor_channels"] == 27:
@@ -589,9 +734,13 @@ class Network(nn.Module):
         x_RA = F.relu(self.conv_RA_1_2(x_RA))
         x_RA = F.relu(self.conv_RA_2_1(x_RA))
         x_RA = F.relu(self.conv_RA_2_2(x_RA))
+        
         # view is reshape
-        x_RA = x_RA.reshape(-1, x_RA.size()[1] * x_RA.size()[2] * x_RA.size()[3])
-        x_RA = F.relu(self.fc3_RA(x_RA))
+        if self.config["network"] == "cnn_imu":
+            x_RA = x_RA.reshape(-1, x_RA.size()[1] * x_RA.size()[2] * x_RA.size()[3])
+            x_RA = F.relu(self.fc3_RA(x_RA))
+        elif self.config["network"] == "lstm":
+            x_RA = F.relu(self.conv_LA_1_1(x[:, :, :, idx_RA]))
 
         # RL
         if self.config["NB_sensor_channels"] in [30, 126]:
@@ -614,8 +763,11 @@ class Network(nn.Module):
             x_RL = F.relu(self.conv_RL_2_1(x_RL))
             x_RL = F.relu(self.conv_RL_2_2(x_RL))
             # view is reshape
-            x_RL = x_RL.reshape(-1, x_RL.size()[1] * x_RL.size()[2] * x_RL.size()[3])
-            x_RL = F.relu(self.fc3_RL(x_RL))
+            if self.config["network"] == "cnn_imu":
+                x_RL = x_RL.reshape(-1, x_RL.size()[1] * x_RL.size()[2] * x_RL.size()[3])
+                x_RL = F.relu(self.fc3_RL(x_RL))
+            elif self.config["network"] == "lstm":
+                x_RL = x_RL.reshape(x_RL.size()[0], -1, x_RL.size()[1] * x_RL.size()[3])
 
         if self.config["NB_sensor_channels"] == 27:
             return x_LA, x_N, x_RA

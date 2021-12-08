@@ -68,6 +68,8 @@ def configuration(dataset_idx, network_idx, output_idx, usage_modus_idx=0, datas
     
     # Options
     dataset = {0: 'mocap', 1: 'mbientlab', 2: 'motionminers_flw'}
+    
+    #lstm here refers to deepcnnlstm
     network = {0: 'cnn', 1: 'lstm', 2: 'cnn_imu'}
     output = {0: 'softmax', 1: 'attribute'}
     usage_modus = {0: 'train', 1: 'test', 2: 'fine_tuning', 3: 'train_final'}
@@ -163,8 +165,8 @@ def configuration(dataset_idx, network_idx, output_idx, usage_modus_idx=0, datas
                    'motionminers_flw': {'cnn': 64, 'lstm': 64, 'cnn_imu': 64}}
 
     freeze_options = [False, True]
-    #evolution_iter = 10000
-    # User gotta take care of creating these folders, or storing the results in a different way
+    
+    # User have to take care of creating these folders, or storing the results in a different way
     
     '''provide the location to save the output of the training. eg:- network, plot, f1, acc values'''    
     if output[output_idx] == 'softmax':
@@ -197,8 +199,7 @@ def configuration(dataset_idx, network_idx, output_idx, usage_modus_idx=0, datas
         
     else:
         raise ("Error: Not selected fine tuning option")
-    
-################################################################################################################################3
+
 
     # Paths are given according to the ones created in *preprocessing.py for the datasets
    
@@ -206,7 +207,9 @@ def configuration(dataset_idx, network_idx, output_idx, usage_modus_idx=0, datas
                     'mbientlab': '/',
                     'motionminers_flw': '/'}
     
+    #should be set up according to your GPU 
     # GPU
+    
     os.environ["CUDA_VISIBLE_DEVICES"] = "1"
     GPU = 0
     
@@ -233,7 +236,6 @@ def configuration(dataset_idx, network_idx, output_idx, usage_modus_idx=0, datas
     now = datetime.datetime.now()
     
     configuration = {'dataset': dataset[dataset_idx],
-                     #'dataset_finetuning': dataset[dataset_fine_tuning_idx],
                      'network': network[network_idx],
                      'output': output[output_idx],
                      'num_filters': num_filters[dataset[dataset_idx]][network[network_idx]],
@@ -245,7 +247,6 @@ def configuration(dataset_idx, network_idx, output_idx, usage_modus_idx=0, datas
                      'plotting': plotting,
                      'usage_modus': usage_modus[usage_modus_idx],
                      'folder_exp': folder_exp,
-                     #'balancing': balancing[dataset[dataset_idx]],
                      'GPU': GPU,
                      #'division_epochs': division_epochs[dataset[dataset_idx]],
                      'NB_sensor_channels': NB_sensor_channels[dataset[dataset_idx]],
@@ -291,12 +292,14 @@ def setup_experiment_logger(logging_level=logging.DEBUG, filename=None):
 
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
+    
     # set a format which is simpler for console use
     formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+    
     # tell the handler to use this format
     console.setFormatter(formatter)
+    
     # add the handler to the root logger
-
     if logging.getLogger('').hasHandlers():
         logging.getLogger('').handlers.clear()
 

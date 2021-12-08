@@ -33,8 +33,10 @@ class Modus_Selecter(object):
         self.config = config
         logging.info('    Network_selecter: \n{}'.format(config))
 
-        self.exp = exp
-        self.network = Network_User(config, self.exp)
+        #activate if using sacred
+        #self.exp = exp
+        #self.network = Network_User(config, self.exp)
+        self.network = Network_User(config)
 
         return
 
@@ -174,7 +176,8 @@ class Modus_Selecter(object):
                          'f1_weighted {}, f1_mean {}, acc_attr {}'.format(time_train, results_train['acc'],
                                                              results_train['f1_weighted'], results_train['f1_mean'], results_train['acc_attrs'] ))
             
-            
+            #activate if using sacred
+            '''
             self.exp.log_scalar("accuracy_train_mo_{}".format(iter_evl),results_train['acc'])
             self.exp.log_scalar("f1_w_train_mo_{}".format(iter_evl),results_train['f1_weighted'])
             self.exp.log_scalar("f1_m_train_mo_{}".format(iter_evl), results_train['f1_mean'])
@@ -184,6 +187,7 @@ class Modus_Selecter(object):
                 p=results_train['acc_attrs']
                 for i in range(0,p.shape[0]):
                     self.exp.log_scalar("acc_attr_{}_train_mo_{}".format(i, iter_evl),p[i])
+            '''
             
             '''activate for impact of activities experiment'''
             '''
@@ -290,6 +294,8 @@ class Modus_Selecter(object):
                       recalls=np.array(recalls_test), best_itera=0, acc_attr_test=acc_attr_test_ac, precisions_attr=np.array(precisions_attr_test), 
                       recalls_attr=np.array(recalls_attr_test))
            
+            #activate if using sacred
+            '''
             self.exp.log_scalar("accuracy_test_mo_{}".format(iter_evl),results_test['acc'])
             self.exp.log_scalar("f1_w_test_mo_{}".format(iter_evl),results_test['f1_weighted'])
             self.exp.log_scalar("f1_m_test_mo_{}".format(iter_evl),results_test['f1_mean'])
@@ -298,6 +304,7 @@ class Modus_Selecter(object):
                 p=results_test['acc_attrs']
                 for i in range(0,p.shape[0]):
                     self.exp.log_scalar("acc_attr_{}_test_mo_{}".format(i, iter_evl),p[i])
+            '''
             
             '''activate to perform impact of activities experiment'''
             '''
