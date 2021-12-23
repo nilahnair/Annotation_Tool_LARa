@@ -789,9 +789,6 @@ class Network_User(object):
         #return results_val, loss_val / v, count_pos_val, count_neg_val
         return results_val, loss_val / v
 
-
-
-
     ##################################################
     ###################  test  ######################
     ##################################################
@@ -968,10 +965,7 @@ class Network_User(object):
 
             plot_trg.set_ydata(test_labels)
             plot_trg.set_xdata(range(test_labels.shape[0]))
-
-            #plot_pred.set_ydata(predictions_labels)
-            #plot_pred.set_xdata(range(predictions_labels.shape[0]))
-
+            
             axis_test.relim()
             axis_test.autoscale_view()
             axis_test.legend(loc='best')

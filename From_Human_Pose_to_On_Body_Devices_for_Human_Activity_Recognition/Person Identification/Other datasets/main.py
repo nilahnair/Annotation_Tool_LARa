@@ -2,20 +2,19 @@
 """
 Created on Sat Mar 13 09:02:03 2021
 
-Modified from the work of fernando moya
-
 @author: nilah
 """
 
 from __future__ import print_function
 import os
 import logging
+from logging import handlers
 import torch
 import numpy as np
 import random
 
 import platform
-from modus_selecter import Modus_Selecter
+from modus_selecter_op import Modus_Selecter
 
 import datetime
 
@@ -61,59 +60,42 @@ def configuration(dataset_idx, network_idx, output_idx, usage_modus_idx=0, datas
     @param fully_convolutional: False for FC or True for FCN
     @return configuration: dict with all the configurations
     """
-    
     # Flags
     plotting = False
     reshape_input=False
     
     # Options
-    dataset = {0: 'mocap', 1: 'mbientlab', 2: 'motionminers_flw'}
-    
-    #lstm here refers to deepcnnlstm
+    dataset = {0: 'locomotion', 1: 'gesture', 2: 'pamap2', 3: 'orderpicking'}
     network = {0: 'cnn', 1: 'lstm', 2: 'cnn_imu'}
     output = {0: 'softmax', 1: 'attribute'}
     usage_modus = {0: 'train', 1: 'test', 2: 'fine_tuning', 3: 'train_final'}
 
     # Dataset Hyperparameters
-    NB_sensor_channels = {'mocap': 126, 'mbientlab': 30,'motionminers_flw': 27}
-    sliding_window_length = {'mocap': 100, 'mbientlab': 100, 'motionminers_flw': 100}
-    sliding_window_step = {'mocap': 12, 'mbientlab': 12, 'motionminers_flw': 12}
+    NB_sensor_channels = {'locomotion' : 113, 'gesture' : 113,'pamap2' : 40, 'orderpicking' : 27 }
+    sliding_window_length = {'locomotion': 100, 'gesture': 100, 'pamap2': 100, 'orderpicking': 100}
+    sliding_window_step = {'locomotion': 12, 'gesture': 12, 'pamap2': 12, 'orderpicking': 1}
     
+    num_classes = {'locomotion' : 4, 'gesture' : 4, 'pamap2' : 9, 'orderpicking': 6}
+   
     '''depending on the sequences created during preprocessing of the data for training 
     the network, change the values with respect to the sensor type.'''
-    num_tr_inputs = {'mocap': 172561, 'mbientlab': 151583, 'motionminers_flw': 93712}
+    num_tr_inputs = {'locomotion': 34162, 'gesture': 34162, 'pamap2': 103611, 'orderpicking': 125914}
     
-    '''depending on the attribute representation choosen please correc the numbers for the sensor data 
-    in use.
-    num_attributes for type 1 = 4
-    num_attributes for type 2 = 10
-    
-    These values do not change based on the senor data being experimented on .'''
-    
-    num_attributes = {'mocap': 10, 'mbientlab': 10, 'motionminers_flw': 1}
-    
-    '''depending on the number of subjects being choosen for the experiment please change the number
-    of classes here.
-    type 1 and type 2 = 7
-    type 3 = 6
-    type 4 = 5
-    all (with IMU data) = 8
-    '''
-    
-    num_classes = {'mocap': 5, 'mbientlab': 5, 'motionminers_flw': 5}
-  
     # It was thought to have different LR per dataset, but experimentally have worked the next three
     # Learning rate
     learning_rates = [0.0001, 0.00001, 0.000001, 0.01]
-    lr = {'mocap': {'cnn': learning_rates[learning_rates_idx],
+    lr = {'locomotion': {'cnn': learning_rates[learning_rates_idx],
                     'lstm': learning_rates[learning_rates_idx],
                     'cnn_imu': learning_rates[learning_rates_idx]},
-          'mbientlab': {'cnn': learning_rates[learning_rates_idx],
+          'gesture': {'cnn': learning_rates[learning_rates_idx],
                         'lstm': learning_rates[learning_rates_idx],
                         'cnn_imu': learning_rates[learning_rates_idx]},
-          'motionminers_flw': {'cnn': learning_rates[learning_rates_idx],
+          'pamap2': {'cnn': learning_rates[learning_rates_idx],
                                 'lstm': learning_rates[learning_rates_idx],
-                                'cnn_imu': learning_rates[learning_rates_idx]}
+                                'cnn_imu': learning_rates[learning_rates_idx]},
+          'orderpicking': {'cnn' : learning_rates[learning_rates_idx], 
+                           'lstm' : learning_rates[learning_rates_idx], 
+                           'cnn_imu': learning_rates[learning_rates_idx]}
           }
     lr_mult = 1.0
 
@@ -133,50 +115,49 @@ def configuration(dataset_idx, network_idx, output_idx, usage_modus_idx=0, datas
         epoch_mult = 1
 
    # Number of epochs depending of the dataset and network
-    epochs = {'mocap': {'cnn': {'softmax': 10, 'attribute': 10},
+    epochs = {'locomotion': {'cnn': {'softmax': 10, 'attribute': 10},
                         'lstm': {'softmax': 10, 'attribute': 10},
                         'cnn_imu': {'softmax': 10, 'attribute': 10}},
-              'mbientlab': {'cnn': {'softmax': 10, 'attribute': 10},
+              'gesture': {'cnn': {'softmax': 10, 'attribute': 10},
                             'lstm': {'softmax': 10, 'attribute': 10},
-                            'cnn_imu': {'softmax': 10, 'attribute': 10}},
-              'motionminers_flw': {'cnn': {'softmax': 10, 'attribute': 10},
+                            'cnn_imu': {'softmax':5, 'attribute': 10}},
+              'pamap2': {'cnn': {'softmax': 10, 'attribute': 10},
                                    'lstm': {'softmax': 10, 'attribute': 10},
-                                   'cnn_imu': {'softmax': 10, 'attribute': 10}}
-              } 
+                                   'cnn_imu': {'softmax': 10, 'attribute': 10}},
+              'orderpicking' : {'cnn' : {'softmax' : 5, 'attribute': 10},
+                                'lstm' : {'softmax' : 25, 'attribute': 1},
+                                'cnn_imu' : {'softmax' : 10, 'attribute': 32}}} 
    #division_epochs = {'mocap': 2, 'mbientlab': 1, 'motionminers_flw': 1}
 
     # Batch size
     batch_size_train = {
-        'cnn': {'mocap': 100, 'mbientlab': 100, 'motionminers_flw': 100},
-        'lstm': {'mocap': 100, 'mbientlab': 100, 'motionminers_flw': 100},
-        'cnn_imu': {'mocap':100, 'mbientlab':200, 'motionminers_flw': 100}}
+        'cnn': {'locomotion': 100, 'gesture': 100, 'pamap2': 100, 'orderpicking' : 200},
+        'lstm': {'locomotion': 100, 'gesture': 100, 'pamap2': 300, 'orderpicking' : 100},
+        'cnn_imu': {'locomotion': 100, 'gesture':100, 'pamap2': 50, 'orderpicking' : 50}}
 
-    batch_size_val = {'cnn': {'mocap': 100, 'mbientlab': 100, 'motionminers_flw': 100},
-                      'lstm': {'mocap': 100, 'mbientlab': 100, 'motionminers_flw': 100},
-                      'cnn_imu': {'mocap':100, 'mbientlab':200, 'motionminers_flw': 100}}
+    batch_size_val = {
+        'cnn': {'locomotion': 100, 'gesture': 100, 'pamap2': 100, 'orderpicking' : 200},
+        'lstm': {'locomotion': 100, 'gesture': 100, 'pamap2': 100, 'orderpicking' : 100},
+        'cnn_imu': {'locomotion': 100, 'gesture':100, 'pamap2': 50, 'orderpicking' : 50}}
     
      # Number of iterations for accumulating the gradients
-    accumulation_steps = {'mocap': 4, 'mbientlab': 4, 'motionminers_flw': 4}
+    accumulation_steps = {'locomotion': 4, 'gesture': 4, 'pamap2': 4, 'orderpicking': 4}
 
     # Filters
-    filter_size = {'mocap': 5, 'mbientlab': 5, 'motionminers_flw': 5}
-    num_filters = {'mocap': {'cnn': 64, 'lstm': 64, 'cnn_imu': 64},
-                   'mbientlab': {'cnn': 64, 'lstm': 64, 'cnn_imu': 64},
-                   'motionminers_flw': {'cnn': 64, 'lstm': 64, 'cnn_imu': 64}}
+    filter_size = {'locomotion': 5, 'gesture': 5, 'pamap2': 5, 'orderpicking' : 5}
+    num_filters = {'locomotion': {'cnn': 64, 'lstm': 64, 'cnn_imu': 64},
+                   'gesture': {'cnn': 64, 'lstm': 64, 'cnn_imu': 64},
+                   'pamap2': {'cnn': 64, 'lstm': 64, 'cnn_imu': 64},
+                   'orderpicking' : {'cnn' :64, 'lstm' : 32, 'cnn_imu': 64}}
 
     freeze_options = [False, True]
     
-    # User have to take care of creating these folders, or storing the results in a different way
+    # User gotta take care of creating these folders, or storing the results in a different way
     
     '''provide the location to save the output of the training. eg:- network, plot, f1, acc values'''    
     if output[output_idx] == 'softmax':
         labeltype = "class"
         folder_base = "/"
-    elif output[output_idx] == 'attribute':
-        labeltype = "attributes"
-        folder_base = "/"
-        
-    print("folderbase selected")
 
     '''provide appropriate name for the experiment file'''
     # Folder
@@ -200,39 +181,35 @@ def configuration(dataset_idx, network_idx, output_idx, usage_modus_idx=0, datas
     else:
         raise ("Error: Not selected fine tuning option")
 
+################################################################################################################################3
 
     # Paths are given according to the ones created in *preprocessing.py for the datasets
-   
-    dataset_root = {'mocap': '/',
-                    'mbientlab': '/',
-                    'motionminers_flw': '/'}
     
-    #should be set up according to your GPU 
+    dataset_root = {'locomotion': '.../locomotions/',
+                    'gesture': '.../gesture/',
+                    'pamap2': '.../pamap/',
+                    'orderpicking': '.../order/'}
+    
     # GPU
-    
-    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     GPU = 0
-    
+   
     # Labels position on the segmented window
     label_pos = {0: 'middle', 1: 'mode', 2: 'end'}
-   
+    
     train_show_value = num_tr_inputs[dataset[dataset_idx]] / \
                        batch_size_train[network[network_idx]][dataset[dataset_idx]]
-    if dataset[dataset_idx] == "mbientlab" or dataset[dataset_idx] == "motionminers_real":
+   
+    if dataset[dataset_idx] == "pamap2":
         train_show = {'cnn': int(train_show_value / 50), 'lstm': 50, 'cnn_imu': int(train_show_value / 50)}
         valid_show = {'cnn': int(train_show_value / 10), 'lstm': 10, 'cnn_imu': int(train_show_value / 10)}
-    elif dataset[dataset_idx] == "mocap":
+    elif dataset[dataset_idx] == "gesture":
         train_show = {'cnn': int(train_show_value / 100), 'lstm': 100, 'cnn_imu': int(train_show_value / 100)}
         valid_show = {'cnn': int(train_show_value / 20), 'lstm': 50, 'cnn_imu': int(train_show_value / 20)}
     else:
-        train_show = {'cnn': int(train_show_value / 100), 'lstm': 100, 'cnn_imu': int(train_show_value / 100)}
-        valid_show = {'cnn': int(train_show_value / 50), 'lstm': 50, 'cnn_imu': int(train_show_value / 50)}
-    
-    '''attribute representation center calculation method selection
-    euclidean refers to nearest neighbour method
-    BCEloss refers to binary cross entropy loss method of finding distance'''
-    dist = {0: 'euclidean', 1: 'BCELoss'}
-    
+        train_show = {'cnn': int(train_show_value / 50), 'lstm': 50, 'cnn_imu': int(train_show_value / 50)}
+        valid_show = {'cnn': int(train_show_value / 10), 'lstm': 10, 'cnn_imu': int(train_show_value / 10)}
+   
     now = datetime.datetime.now()
     
     configuration = {'dataset': dataset[dataset_idx],
@@ -248,11 +225,9 @@ def configuration(dataset_idx, network_idx, output_idx, usage_modus_idx=0, datas
                      'usage_modus': usage_modus[usage_modus_idx],
                      'folder_exp': folder_exp,
                      'GPU': GPU,
-                     #'division_epochs': division_epochs[dataset[dataset_idx]],
                      'NB_sensor_channels': NB_sensor_channels[dataset[dataset_idx]],
                      'sliding_window_length': sliding_window_length[dataset[dataset_idx]],
                      'sliding_window_step': sliding_window_step[dataset[dataset_idx]],
-                     'num_attributes': num_attributes[dataset[dataset_idx]],
                      'batch_size_train': batch_size_train[network[network_idx]][dataset[dataset_idx]],
                      'batch_size_val': batch_size_val[network[network_idx]][dataset[dataset_idx]],
                      'num_tr_inputs': num_tr_inputs[dataset[dataset_idx]],
@@ -268,11 +243,10 @@ def configuration(dataset_idx, network_idx, output_idx, usage_modus_idx=0, datas
                      'reshape_input': reshape_input,
                      'name_counter': name_counter,
                      'freeze_options': freeze_options[freeze],
-                     #'percentages_names': percentages_names[percentage_idx],
                      'fully_convolutional': fully_convolutional,
-                     #'sacred': sacred, #activate this if using sacred
+                     #'sacred': sacred,
                      'labeltype': labeltype,
-                     'distance': dist[dist_idx]}
+                     }
 
     return configuration
 
@@ -292,14 +266,12 @@ def setup_experiment_logger(logging_level=logging.DEBUG, filename=None):
 
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
-    
     # set a format which is simpler for console use
     formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
-    
     # tell the handler to use this format
     console.setFormatter(formatter)
-    
     # add the handler to the root logger
+
     if logging.getLogger('').hasHandlers():
         logging.getLogger('').handlers.clear()
 
@@ -312,8 +284,8 @@ def setup_experiment_logger(logging_level=logging.DEBUG, filename=None):
 @ex.config
 def my_config():
     print("configuration function began")
-    config = configuration(dataset_idx=1,
-                           network_idx=2,
+    config = configuration(dataset_idx=2,
+                           network_idx=0,
                            output_idx=0,
                            usage_modus_idx=0,
                            #dataset_fine_tuning_idx=0,
@@ -323,7 +295,8 @@ def my_config():
                            freeze=0,
                            fully_convolutional=False,
                            #percentage_idx=12,
-                           #pooling=0
+                           #pooling=0,
+                           dist_idx=0
                            )
     
     dataset = config["dataset"]
@@ -335,6 +308,7 @@ def my_config():
     #pooling = config["pooling"]
     lr = config["lr"]
     bsize = config["batch_size_train"]
+    dist = config["distance"]
     
 @ex.capture
 def run(config, dataset, network, output, usageModus):
@@ -377,7 +351,7 @@ def main():
 
     print("Done")
 
-'''   
+'''    
 
 def main():
     """
@@ -389,40 +363,39 @@ def main():
     """
     dataset_idx = [1]
     network_idx = [2]
-    reshape_input = [False]
+    reshape_input = [True]
     output_idxs = [0]
     lrs = [0, 1, 2]
+    #dataset_ft_idx = [0,1,2,3]
     counter_exp = 0
     freeze = [0]
     #percentages = [12]
     for dts in range(len(dataset_idx)):
         for nt in range(len(network_idx)):
             for opt in output_idxs:
-                for rsi in range(len(reshape_input)):
-                    for fr in freeze:
-                        for lr in lrs:
-                            config = configuration(dataset_idx=dataset_idx[dts],
-                                                   network_idx=network_idx[nt],
-                                                   output_idx=opt,
-                                                   usage_modus_idx=0,
-                                                   reshape_input=reshape_input[rsi],
-                                                   learning_rates_idx=lr,
-                                                   name_counter=counter_exp,
-                                                   freeze=fr,
-                                                   fully_convolutional=False,
-                                                   dist_idx=1)
+               for rsi in range(len(reshape_input)):
+                   for fr in freeze:
+                       for lr in lrs:
+                           config = configuration(dataset_idx=dataset_idx[dts],
+                                                  network_idx=network_idx[nt],
+                                                  output_idx=opt,
+                                                  usage_modus_idx=5,
+                                                  reshape_input=reshape_input[rsi],
+                                                  learning_rates_idx=lr,
+                                                  name_counter=counter_exp,
+                                                  freeze=fr,
+                                                  fully_convolutional=False)
 
-                            setup_experiment_logger(logging_level=logging.DEBUG,
-                                                    filename=config['/'] + "logger.txt")
+                           setup_experiment_logger(logging_level=logging.DEBUG,
+                                                   filename=config['/'] + "logger.txt")
 
-                            logging.info('Finished')
-                            
-                            modus = Modus_Selecter(config)
+                           logging.info('Finished')
 
-                            # Starting process
-                            modus.net_modus()
-                            counter_exp += 1
+                           modus = Modus_Selecter(config)
 
+                           # Starting process
+                           modus.net_modus()
+                           counter_exp += 1
 
     return
 
