@@ -1,4 +1,4 @@
-**Person Identification using Motion Information**
+**Multi-Channel Time-Series Person and Soft-Biometric Identification**
 
 This project is focused on experimenting with datasets created for Human Activity Recognition (HAR), to identify whether the individuals can be recognised irrespective of the activity being performed. In addition, the impact of activities, that were present in the dataset, on the identification accuracy was tested. Furthermore, the project attempted to make use of soft-biometrics such as age, gender, height, and weight, to create an attribute representation. 
 
@@ -6,6 +6,7 @@ The three datasets that were used for experimentation are:
 1. LARa
 2. OPPORTUNITY
 3. PAMAP2
+4. Order Picking
 
 The networks that were used for experimentation are:
 1. tCNN-IMU
