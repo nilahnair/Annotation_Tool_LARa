@@ -65,7 +65,10 @@ Where:
 It can be noticed that some individuals have the same attribute representation. For example in Type 1 attribute representation, subject 5 and 6 have the same representation, and 3 and 7 too have the same attribute representation. As a result, the representations are considered to be centers and each indiviudal is assigned to the centers based on their attribute representation, as shown in the Figure below. 
   
 <p align="center">
-  <img src="https://github.com/nilahnair/Annotation_Tool_LARa/blob/master/From_Human_Pose_to_On_Body_Devices_for_Human_Activity_Recognition/Person%20Identification/Images/center.PNG" width="350" title="Type 1 subjects assigned to the centers">
+ ![An example of the assignment of an individual's soft-biometrics to attribute representation.](https://github.com/nilahnair/Annotation_Tool_LARa/blob/master/From_Human_Pose_to_On_Body_Devices_for_Human_Activity_Recognition/Person%20Identification/Images/center.PNG) 
+ </p>
+ <p align="center">
+ <img src="https://github.com/nilahnair/Annotation_Tool_LARa/blob/master/From_Human_Pose_to_On_Body_Devices_for_Human_Activity_Recognition/Person%20Identification/Images/center.PNG" width="350" title="Type 1 subjects assigned to the centers">
 </p>
 
 
