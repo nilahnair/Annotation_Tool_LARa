@@ -4,7 +4,7 @@ This project is focused on experimenting with datasets created for Human Activit
 
 The three datasets that were used for experimentation are:
 1. [LARa](https://zenodo.org/record/3862782#.YvoQFHZByF4)
-2. [OPPORTUNITY](https://archive.ics.uci.edu/ml/datasets/opportunity+activity+recognition#:~:text=Data%20Set%20Information%3A-,The%20OPPORTUNITY%20Dataset%20for%20Human%20Activity%20Recognition%20from%20Wearable%2C%20Object,%2C%20feature%20extraction%2C%20etc).)
+2. [OPPORTUNITY](https://archive.ics.uci.edu/ml/datasets/opportunity+activity+recognition#:~:text=Data%20Set%20Information%3A-,The%20OPPORTUNITY%20Dataset%20for%20Human%20Activity%20Recognition%20from%20Wearable%2C%20Object,%2C%20feature%20extraction%2C%20etc)
 3. [PAMAP2](https://archive.ics.uci.edu/ml/datasets/pamap2+physical+activity+monitoring)
 4. [Order Picking](https://www.scitepress.org/papers/2016/58284/58284.pdf)
 
