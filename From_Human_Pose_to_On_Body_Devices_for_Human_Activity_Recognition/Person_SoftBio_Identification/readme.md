@@ -1,12 +1,12 @@
 **Multi-Channel Time-Series Person and Soft-Biometric Identification**
 
-This project is focused on experimenting with datasets created for Human Activity Recognition (HAR), to identify whether the individuals can be recognised irrespective of the activity being performed. In addition, the impact of activities, that were present in the dataset, on the identification accuracy was tested. Furthermore, the project attempted to make use of soft-biometrics such as age, gender, height, and weight, to create an attribute representation. 
+This project is focused on experimenting with datasets created for Human Activity Recognition (HAR), to identify whether the individuals can be recognised irrespective of the activity being performed. In addition, the impact of activities, that were present in the dataset, on the identification accuracy was tested. Furthermore, the project attempted to make use of soft-biometrics such as age, gender, height, and weight, to create an attribute representation. This experiment was performed on LARa and PAMAP2 dataset, as these datasets have a recording protocol. 
 
 The three datasets that were used for experimentation are:
-1. LARa
-2. OPPORTUNITY
-3. PAMAP2
-4. Order Picking
+1. LARa[LARa](https://zenodo.org/record/3862782#.YvoQFHZByF4)
+2. OPPORTUNITY [OPPORTUNITY](https://archive.ics.uci.edu/ml/datasets/opportunity+activity+recognition#:~:text=Data%20Set%20Information%3A-,The%20OPPORTUNITY%20Dataset%20for%20Human%20Activity%20Recognition%20from%20Wearable%2C%20Object,%2C%20feature%20extraction%2C%20etc).)
+3. PAMAP2 [PAMAP2](https://archive.ics.uci.edu/ml/datasets/pamap2+physical+activity+monitoring)
+4. Order Picking [Order Picking dataset](https://www.scitepress.org/papers/2016/58284/58284.pdf)
 
 The networks that were used for experimentation are:
 1. tCNN-IMU
