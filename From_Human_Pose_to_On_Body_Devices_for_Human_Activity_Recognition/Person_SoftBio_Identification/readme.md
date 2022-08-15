@@ -12,7 +12,13 @@ The networks that were used for experimentation are:
 1. tCNN-IMU<sub>MLP</sub>
 2. tCNN-IMU<sub>LSTM</sub>
 
-Two types of attribute representation were created based on the recording protocol of LARa dataset. Only the subjects with IMU data were considered. 
+ <p align="center">
+ <img src="https://github.com/nilahnair/Annotation_Tool_LARa/blob/master/From_Human_Pose_to_On_Body_Devices_for_Human_Activity_Recognition/Person_SoftBio_Identification/Images/cnnimu.PNG">
+</p>
+
+The above image can be used to represent both tCNN-IMU<sub>MLP</sub> and tCNN-IMU<sub>LSTM</sub>. The major difference lies in the section marked in blue. In the case of  tCNN-IMU<sub>MLP</sub>, here we would have a fully connected layer. Whereas, in the case of tCNN-IMU<sub>LSTM</sub>, we have two LSTM layers. 
+
+Soft-biometrics can be converted into attributes. Two types of attribute representation were created based on the recording protocol of LARa dataset. Only the subjects with IMU data were considered. 
 
 LARa Recording Protocol:
 
@@ -64,6 +70,8 @@ Where:
   F: Female
   M: Male
   
+Similarly, we created an attribute representation with the recording protocol of the PAMAP2, as shown below. 
+  
 PAMAP2 Recording Protocol: 
 
 | Subject | Gender | Age | Height | Weight | Resting HR | Max HR | Dom. Hand |
@@ -110,10 +118,16 @@ Where:
  L: Left
  R: Right 
     
-It can be noticed that some individuals have the same attribute representation. For example in Type 1 attribute representation, subject 5 and 6 have the same representation, and 3 and 7 too have the same attribute representation. As a result, the representations are considered to be centers and each indiviudal is assigned to the centers based on their attribute representation, as shown in the Figure below. 
+It can be noticed that some individuals have the same attribute representation, as seen in the LARa dataset attribute represntation type 1 and 2. For example in Type 1 attribute representation LARa, subject 5 and 6 have the same representation, and 3 and 7 too have the same attribute representation. As a result, the representations are considered to be centers and each indiviudal is assigned to the centers based on their attribute representation, as shown in the Figure below. 
  
  <p align="center">
  <img src="https://github.com/nilahnair/Annotation_Tool_LARa/blob/master/From_Human_Pose_to_On_Body_Devices_for_Human_Activity_Recognition/Person_SoftBio_Identification/Images/center.PNG">
+</p>
+
+Below we have the attrCNN-IMU network. Based on the experimental result of the person identification, it was identified that CNN-IMU<sub>MLP</sub> performance was better in general, in comparison to CNN-IMU<sub>LSTM</sub>. Thus, we have performed the experiments of soft-biometric attribute representation with attrCNN-IMU<sub>MLP</sub>. 
+
+<p align="center">
+ <img src="https://github.com/nilahnair/Annotation_Tool_LARa/blob/master/From_Human_Pose_to_On_Body_Devices_for_Human_Activity_Recognition/Person_SoftBio_Identification/Images/attrcnnimu.PNG">
 </p>
 
 
