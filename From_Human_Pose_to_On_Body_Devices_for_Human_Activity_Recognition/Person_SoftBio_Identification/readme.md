@@ -2,8 +2,8 @@
 
 This project is focused on experimenting with datasets created for Human Activity Recognition (HAR), to identify whether the individuals can be recognised irrespective of the activity being performed. In addition, the impact of activities, that were present in the dataset, on the identification accuracy was tested. Furthermore, the project attempted to make use of soft-biometrics such as age, gender, height, and weight, to create an attribute representation. This experiment was performed on LARa and PAMAP2 dataset, as these datasets have a recording protocol. 
 
-The three datasets that were used for experimentation are:
-1. [LARa](https://zenodo.org/record/3862782#.YvoQFHZByF4)
+The four datasets that were used for experimentation are:
+1. [LARa](https://zenodo.org/record/3862782#.YvoQFHZByF4) Version 1 (Please note that there is a version two available for use.)
 2. [OPPORTUNITY](https://archive.ics.uci.edu/ml/datasets/opportunity+activity+recognition#:~:text=Data%20Set%20Information%3A-,The%20OPPORTUNITY%20Dataset%20for%20Human%20Activity%20Recognition%20from%20Wearable%2C%20Object,%2C%20feature%20extraction%2C%20etc)
 3. [PAMAP2](https://archive.ics.uci.edu/ml/datasets/pamap2+physical+activity+monitoring)
 4. [Order Picking](https://www.scitepress.org/papers/2016/58284/58284.pdf)
@@ -118,7 +118,7 @@ Where:
  L: Left
  R: Right 
     
-It can be noticed that some individuals have the same attribute representation, as seen in the LARa dataset attribute represntation type 1 and 2. For example in Type 1 attribute representation LARa, subject 5 and 6 have the same representation, and 3 and 7 too have the same attribute representation. As a result, the representations are considered to be centers and each indiviudal is assigned to the centers based on their attribute representation, as shown in the Figure below. 
+It can be noticed that some individuals have the same attribute representation, as seen in the LARa dataset attribute representation type 1 and 2. For example in Type 1 attribute representation LARa, subject 5 and 6 have the same representation, and 3 and 7 too have the same attribute representation. As a result, the representations are considered to be centers and each indiviudal is assigned to the centers based on their attribute representation, as shown in the Figure below. 
  
  <p align="center">
  <img src="https://github.com/nilahnair/Annotation_Tool_LARa/blob/master/From_Human_Pose_to_On_Body_Devices_for_Human_Activity_Recognition/Person_SoftBio_Identification/Images/center.PNG">
