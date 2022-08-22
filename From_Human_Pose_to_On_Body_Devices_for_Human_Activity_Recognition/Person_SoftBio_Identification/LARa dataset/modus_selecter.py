@@ -1,9 +1,7 @@
 '''
 Created on May 17, 2019
-
-@author: fmoya
-
-Modified by nilah nair
+Code taken from Fernando Moya
+Modified by Nilah Nair
 '''
 
 from __future__ import print_function

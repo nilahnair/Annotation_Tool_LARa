@@ -45,6 +45,7 @@ class HARWindows(Dataset):
 
         @param data: index of item in List
         @return window_data: dict with sequence window, label of window, and labels of each sample in window
+        please verify the label titles from the obj allocation of preprocessing_opp.py and preprocessing_pam.py
         '''
         window_name = os.path.join(self.root_dir, self.harwindows.iloc[idx, 0])
         f = open(window_name, 'rb')

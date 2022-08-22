@@ -2,7 +2,7 @@
 """
 Created on Mon Jul 19 07:49:13 2021
 
-@author: nilah
+@author: fmoya
 adapted from: 'fjordonez'
 """
 
@@ -82,7 +82,8 @@ drill_data_files = ['/Opportunity/dataset/S1-Drill.dat', #0
                  ]
 
 # Hardcoded thresholds to define global maximums and minimums for every one of the 113 sensor channels employed in the
-# OPPORTUNITY challenge
+# OPPORTUNITY challenge - as taken from the opportunity dataset creators
+
 NORM_MAX_THRESHOLDS = [3000,   3000,   3000,   3000,   3000,   3000,   3000,   3000,   3000,
                        3000,   3000,   3000,   3000,   3000,   3000,   3000,   3000,   3000,
                        3000,   3000,   3000,   3000,   3000,   3000,   3000,   3000,   3000,

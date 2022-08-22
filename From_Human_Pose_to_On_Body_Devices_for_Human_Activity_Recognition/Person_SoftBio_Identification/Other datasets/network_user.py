@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Mar 13 15:24:03 2021
-
-@author: nilah nair
-
 Code by Fernando Moya
+modified by nilah nair
 """
 
 from __future__ import print_function

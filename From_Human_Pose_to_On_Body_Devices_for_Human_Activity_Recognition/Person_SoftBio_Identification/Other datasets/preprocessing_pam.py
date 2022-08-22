@@ -2,7 +2,7 @@
 """
 Created on Mon Jul 19 07:49:13 2021
 
-@author: nilah
+@author: fmoya
 adapted from: 'fjordonez'
 """
 
@@ -40,7 +40,7 @@ PAMAP2_DATA_FILES = ['/PAMAP2_Dataset/Protocol/subject101.dat', #0
                      ]
 
 # Hardcoded thresholds to define global maximums and minimums for every one of the 113 sensor channels employed in the
-# OPPORTUNITY challenge
+# OPPORTUNITY challenge - as given by the dataset creators
 NORM_MAX_THRESHOLDS = [202.0, 35.5, 47.6314, 155.532, 157.76, 45.5484, 62.2598, 61.728, 21.8452,
                        13.1222, 14.2184, 137.544, 109.181, 100.543, 38.5625, 26.386, 153.582,
                        37.2936, 23.9101, 61.9328, 36.9676, 15.5171, 5.97964, 2.94183, 80.4739,

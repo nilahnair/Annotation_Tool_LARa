@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Mar 10 17:26:32 2021
-
-@author: nilah
+Code taken from Fernando Moya
+Modified by Nilah Nair
 """
 import os
 import sys
@@ -55,7 +55,7 @@ def statistics_measurements():
     '''
     
     #path to the IMU dataset
-    #dataset_path_imu = "/vol/actrec/DFG_Project/2019/LARa_dataset/Mbientlab/LARa_dataset_mbientlab/"
+    #dataset_path_imu = "LARa_dataset/Mbientlab/LARa_dataset_mbientlab/"
     dataset_path_imu = '/'
     
     '''The experiments were conducted on different subdivisions of the dataset w.r.t the subjects and number of recording.
@@ -185,7 +185,8 @@ if __name__ == '__main__':
     max_values, min_values, mean_values, std_values = statistics_measurements()
     
     '''
-    the accumulated max, min, mean and std values will be saved in the folder mentioned in base directory with the name given in csv_dir'''
+    the accumulated max, min, mean and std values will be saved in the folder mentioned in base directory with the name given in csv_dir
+    '''
     x = []
     x.append(list(max_values))
     x.append(list(min_values))
@@ -193,7 +194,7 @@ if __name__ == '__main__':
     x.append(list(std_values))
     x=np.asarray(x)
   
-    #base_directory='/data/nnair/trial/'
+    #base_directory='/trial/'
     base_directory='/'
     csv_dir=  base_directory+"normvalues.csv"
     print(csv_dir)

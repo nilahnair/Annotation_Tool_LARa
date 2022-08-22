@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Mar 10 17:26:32 2021
-
-Modfied from the work of Fernando Moya
-@author: nilah
+Code taken from Fernando Moya
+Modified by Nilah Nair
 """
 import os
 import sys
@@ -55,8 +54,8 @@ def statistics_measurements():
     returns a max_values, min_values, mean_values, std_values
     '''
     #Enter path of the dataset 
-    #dataset_path_mocap = "/vol/actrec/DFG_Project/2019/LARa_dataset/MoCap/recordings_2019/14_Annotated_Dataset_renamed/"
-    dataset_path_mocap = ""
+    #dataset_path_mocap = "/MoCap/recordings_2019/14_Annotated_Dataset_renamed/"
+    dataset_path_mocap = "/"
     
     
     '''The experiments were conducted on different subdivisions of the dataset w.r.t the subjects and number of recording.
@@ -195,7 +194,7 @@ if __name__ == '__main__':
     x=np.asarray(x)
     #print(x)
   
-    #base_directory='/data/nnair/trial/'
+    #base_directory='/trial/'
     base_directory= '/'
     csv_dir=  base_directory+"normvalues.csv"
     np.savetxt(csv_dir, x, delimiter="\n", fmt='%s')

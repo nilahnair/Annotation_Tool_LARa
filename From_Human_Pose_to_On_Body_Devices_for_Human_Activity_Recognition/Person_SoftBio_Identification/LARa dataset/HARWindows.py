@@ -1,9 +1,7 @@
 '''
 Created on May 18, 2019
-
-@author: fernando moya
-
-modified by nilah nair
+Code taken from Fernando Moya
+Modified by Nilah Nair
 '''
 
 import os

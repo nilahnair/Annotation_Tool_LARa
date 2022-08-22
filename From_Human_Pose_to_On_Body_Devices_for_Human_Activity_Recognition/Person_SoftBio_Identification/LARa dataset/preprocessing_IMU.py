@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Mar  2 21:25:42 2021
-
-Code by Fernando Moya: https://github.com/wilfer9008/Annotation_Tool_LARa/tree/master/From_Human_Pose_to_On_Body_Devices_for_Human_Activity_Recognition
-
-code modified by nilah nair
+Code taken from Fernando Moya
+Modified by Nilah Nair
 """
 import numpy as np
 import csv
@@ -17,14 +15,14 @@ import pickle
 
 
 #enter the path where the dataset is saved
-#FOLDER_PATH = "/vol/actrec/DFG_Project/2019/LARa_dataset/Mbientlab/LARa_dataset_mbientlab/"
+#FOLDER_PATH = "/Mbientlab/LARa_dataset_mbientlab/"
 FOLDER_PATH = '/'
 
 '''number of subject classes vary depending on the type of subset of data that is being considered for experiment
 type 1 and type 2 = 7
 type 3 = 6
 type 4 = 5
-all =8
+all = 8
 '''
 NUM_CLASSES=8
 
@@ -84,6 +82,9 @@ def norm_mbientlab(data, subset):
 
     @param data: numpy integer matrix
     @return data_norm: Normalized sensor data
+    
+    before running the preprocessing, please make sure that you have run the norm_imu.py file to obtain the mean and std deviation data and 
+    updated the respective fields. 
     '''
     if subselection[subset] == "type1":
         mean_values = np.array([-0.604270513,  0.152956490,  0.322321324,  0.389408162,
@@ -351,6 +352,10 @@ def generate_data(subset, sliding_window_length, sliding_window_step, data_dir=N
                                     seq = np.require(seq, dtype=np.float)
                                     #print(seq.shape)
                                     #obj = {"data": seq, "label": labelid}
+                                    '''
+                                    not that the obj setting will influene the HARWindows.py code. If you make changes here, please make the respective
+                                    changes to the file.
+                                    '''
                                     obj = {"data": seq, "act_label": y[f], "act_labels_all": y_all[f], "label": labelid}
                                     file_name = open(os.path.join(data_dir,
                                                                   'seq_{0:06}.pkl'.format(counter_seq)), 'wb')
@@ -432,9 +437,16 @@ def create_dataset():
     data_dir_val = base_directory + 'sequences_val/'
     data_dir_test = base_directory + 'sequences_test/'
     
-    '''choose the subselection of data here. Enter the number in subset as per the subselection you require
-    subselection= { 0:"type1" , 1:"type2", 2:"type3", 3:"type4", 4:"all"}'''
+    '''
+    choose the subselection of data here. Enter the number in subset as per the subselection you require
+    subselection= { 0:"type1" , 1:"type2", 2:"type3", 3:"type4", 4:"all"}
+    '''
+    
     subset=4
+    
+    ''' 
+    to generate dara based on the selected window length, step, and directory.
+    '''
     
     generate_data(subset, sliding_window_length=100, sliding_window_step=12, data_dir=data_dir_train, usage_modus='train')
     generate_data(subset, sliding_window_length=100, sliding_window_step=12, data_dir=data_dir_val, usage_modus='val')

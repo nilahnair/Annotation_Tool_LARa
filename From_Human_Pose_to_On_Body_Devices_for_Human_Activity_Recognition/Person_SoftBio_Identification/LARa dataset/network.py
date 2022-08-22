@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Mar 13 14:03:18 2021
-
-modified from the code of fernando moya
-
-@author: nilah nair
+Code taken from Fernando Moya
+Modified by Nilah Nair
 """
 
 from __future__ import print_function
@@ -105,7 +103,7 @@ class Network(nn.Module):
                     self.fc3 = nn.Linear(self.config['num_filters'] * int(Wx) * self.config['NB_sensor_channels'], 256)
         
          # set the Conv layers
-        if self.config["network"] == "cnn_imu":
+        elif self.config["network"] == "cnn_imu":
             # LA
             self.conv_LA_1_1 = nn.Conv2d(in_channels=in_channels,
                                      out_channels=self.config['num_filters'],
@@ -296,7 +294,7 @@ class Network(nn.Module):
                     self.fc3_RL = nn.Linear(self.config['num_filters'] * int(Wx) * 24, 256)
                     
          # set the Conv layers
-        if self.config["network"] == "lstm":
+        elif self.config["network"] == "lstm":
             # LA
             self.conv_LA_1_1 = nn.Conv2d(in_channels=in_channels,
                                      out_channels=self.config['num_filters'],
@@ -407,15 +405,15 @@ class Network(nn.Module):
                                           stride=1, padding=padding)
 
         
-        if self.config["NB_sensor_channels"] == 27:
-            self.fc3 = nn.LSTM(input_size=(self.config['num_filters']*int(self.config['NB_sensor_channels'])),hidden_size= 256, num_layers=2, batch_first=True)
+            if self.config["NB_sensor_channels"] == 27:
+                self.fc3 = nn.LSTM(input_size=(self.config['num_filters']*int(self.config['NB_sensor_channels'])),hidden_size= 256, num_layers=2, batch_first=True)
             
-        elif self.config["NB_sensor_channels"] == 30:
-            self.fc3 = nn.LSTM(input_size=(self.config['num_filters']*int(self.config['NB_sensor_channels'])), hidden_size= 256, dropout=0.5, num_layers=2, batch_first=True)
+            elif self.config["NB_sensor_channels"] == 30:
+                self.fc3 = nn.LSTM(input_size=(self.config['num_filters']*int(self.config['NB_sensor_channels'])), hidden_size= 256, dropout=0.5, num_layers=2, batch_first=True)
             
             
-        elif self.config["NB_sensor_channels"] == 126:
-            self.fc3 = nn.LSTM(input_size=(self.config['num_filters']*126),hidden_size= 256, num_layers=2, batch_first=True)
+            elif self.config["NB_sensor_channels"] == 126:
+                self.fc3 = nn.LSTM(input_size=(self.config['num_filters']*126),hidden_size= 256, num_layers=2, batch_first=True)
             
         
         # MLP

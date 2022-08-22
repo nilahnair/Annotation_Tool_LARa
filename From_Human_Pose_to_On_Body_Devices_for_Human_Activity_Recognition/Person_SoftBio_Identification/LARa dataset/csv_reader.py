@@ -1,7 +1,7 @@
 '''
 Created on May 18, 2019
-
-@author: fernando moya
+Code taken from Fernando Moya
+Modified by Nilah Nair
 '''
 
 import numpy as np

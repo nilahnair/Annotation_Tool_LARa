@@ -1,7 +1,7 @@
 '''
 Python code taken from
 # from http://www.johnvinyard.com/blog/?p=268
-
+Modified Code taken from Fernando Moya
 '''
 
 import numpy as np

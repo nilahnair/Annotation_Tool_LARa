@@ -1,9 +1,6 @@
 '''
 Created on May 17, 2019
-
-@author: nilah nair
-
-Adapted from the code of fernando moya
+Code of fernando moya
 '''
 
 from __future__ import print_function
@@ -459,7 +456,6 @@ class Modus_Selecter(object):
                     self.exp.log_scalar("none_n_v_f{}".format(iter_evl), c_neg_val[17])
                 else:
                     self.exp.log_scalar("none_n_v_f{}".format(iter_evl), c_neg_val[17]/(c_pos_val[17]+c_neg_val[17]))
-                
                 '''
                            
             # Saving the results
