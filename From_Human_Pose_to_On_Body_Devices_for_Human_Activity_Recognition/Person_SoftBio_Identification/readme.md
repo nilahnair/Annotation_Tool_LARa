@@ -130,6 +130,6 @@ Below we have the attrCNN-IMU network. Based on the experimental result of the p
  <img src="https://github.com/nilahnair/Annotation_Tool_LARa/blob/master/From_Human_Pose_to_On_Body_Devices_for_Human_Activity_Recognition/Person_SoftBio_Identification/Images/attrcnnimu.PNG">
 </p>
 
-
+Please feel free the contact the authors on any clarification with respect to the code. We have tried to comment and explain the code as much as possible. However, it does contain few experimental set-up that have been commented out and requires changing the code to suit the general application. Hence, feel free to contact for more information.
  
 
